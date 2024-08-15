@@ -1,0 +1,6 @@
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(database.StatusRepositoryITSpec, zio.test.sbt.ZioSpecFingerprint$@65cd42be, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(database.UserRepositoryITSpec, zio.test.sbt.ZioSpecFingerprint$@65cd42be, false, [SuiteSelector])[0m
+[0m[[0m[0minfo[0m] [0m[0mCompleted tests[0m
+[0m[[0m[0mdebug[0m] [0m[0mPassed tests:[0m
+[0m[[0m[0mdebug[0m] [0m[0m	database.StatusRepositoryITSpec[0m
+[0m[[0m[0mdebug[0m] [0m[0m	database.UserRepositoryITSpec[0m
