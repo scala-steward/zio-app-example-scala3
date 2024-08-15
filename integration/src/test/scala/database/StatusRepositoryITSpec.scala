@@ -1,13 +1,11 @@
 package database
 
-import com.dimafeng.testcontainers.PostgreSQLContainer
+import _root_.util.*
 import database.repository.{StatusRepository, StatusRepositoryAlg}
-import database.schema.UserTable
-import domain.{PortDetails, User}
+import database.util.ZConnectionPoolWrapper
+import domain.PortDetails
 import org.flywaydb.core.api.output.ValidateResult
 import org.testcontainers.containers
-import _root_.util.*
-import util.ZConnectionPoolWrapper
 import zio.*
 import zio.jdbc.*
 import zio.test.*

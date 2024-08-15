@@ -1,16 +1,15 @@
 package database
 
-import com.dimafeng.testcontainers.PostgreSQLContainer
+import _root_.util.*
 import database.repository.{UserRepository, UserRepositoryAlg}
 import database.schema.UserTable
+import database.util.ZConnectionPoolWrapper
 import domain.{PortDetails, User}
 import org.flywaydb.core.api.output.ValidateResult
 import org.testcontainers.containers
-import _root_.util.*
 import zio.*
 import zio.jdbc.*
 import zio.test.*
-import util.ZConnectionPoolWrapper
 
 object UserRepositoryITSpec extends ZIOSpecDefault {
 

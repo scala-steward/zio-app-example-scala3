@@ -1,14 +1,10 @@
 package database.service
 
-import database.repository.{StatusRepository, StatusRepositoryAlg}
-import domain.{DependenciesStatusResponse, PortDetails, StatusResponse, User}
+import database.repository.StatusRepositoryAlg
 import http.server.endpoint.HealthCheckEndpointsSpec.{suite, test}
-import http.server.endpoint.{HealthCheckEndpoints, HealthCheckEndpointsAlg}
-import org.testcontainers.containers
 import util.generators.Generators
 import zio.*
-import zio.Clock.ClockLive
-import zio.jdbc.{ZConnection, ZConnectionPool, ZConnectionPoolConfig}
+import zio.jdbc.{ZConnection, ZConnectionPool}
 import zio.test.*
 
 
@@ -20,7 +16,7 @@ object StatusServiceSpec extends ZIOSpecDefault with Generators {
   )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
-    suite("UserService")(
+    suite("StatusService")(
       select1Tests
     )
 
@@ -32,7 +28,6 @@ object StatusServiceSpec extends ZIOSpecDefault with Generators {
         .provide(
           mockRepo(ZIO.succeed(Option(1))),
           ZConnectionPool.h2test,
-          ZLayer.succeed(ZConnectionPoolConfig.default),
           StatusService.live
         )
     },
@@ -43,7 +38,6 @@ object StatusServiceSpec extends ZIOSpecDefault with Generators {
         .provide(
           mockRepo(ZIO.none),
           ZConnectionPool.h2test,
-          ZLayer.succeed(ZConnectionPoolConfig.default),
           StatusService.live
         )
     }

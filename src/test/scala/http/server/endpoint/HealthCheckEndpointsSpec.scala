@@ -1,8 +1,7 @@
 package http.server.endpoint
 
-import database.service.{StatusService, StatusServiceAlg}
 import domain.{DependenciesStatusResponse, StatusResponse}
-import program.{HealthProgram, HealthProgramAlg}
+import program.HealthProgramAlg
 import zio.*
 import zio.http.*
 import zio.jdbc.ZConnectionPool
@@ -27,7 +26,7 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
 
   private val statusEndpointTests = suite("/status")(
     test("returns 200 and a proper json body when GET /status is called") {
-      (for {
+      for {
         routes <- ZIO.serviceWith[HealthCheckEndpointsAlg](_.routes)
         url <- ZIO.fromEither(URL.decode("/status"))
         validStatusRequest = Request(
@@ -40,7 +39,7 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
       } yield assertTrue(
         response.status == Status.Ok,
         body == expected.toJson
-      ))
+      )
     }.provide(
       ZConnectionPool.h2test,
       healthProgramMock(ZIO.succeed(Map.empty)),

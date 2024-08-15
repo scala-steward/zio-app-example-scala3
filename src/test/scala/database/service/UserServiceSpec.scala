@@ -1,14 +1,11 @@
 package database.service
 
-import database.repository.{UserRepository, UserRepositoryAlg}
-import domain.{DependenciesStatusResponse, PortDetails, StatusResponse, User}
+import database.repository.UserRepositoryAlg
+import domain.User
 import http.server.endpoint.HealthCheckEndpointsSpec.{suite, test}
-import http.server.endpoint.{HealthCheckEndpoints, HealthCheckEndpointsAlg}
-import org.testcontainers.containers
 import util.generators.Generators
 import zio.*
-import zio.Clock.ClockLive
-import zio.jdbc.{ZConnection, ZConnectionPool, ZConnectionPoolConfig}
+import zio.jdbc.{ZConnection, ZConnectionPool}
 import zio.test.*
 
 
