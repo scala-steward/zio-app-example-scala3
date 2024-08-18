@@ -1,6 +1,7 @@
 package util.generators
 
 import domain.User
+import domain.payload.CreateUserPayload
 import zio.test.Gen
 
 trait Generators {
@@ -12,5 +13,11 @@ trait Generators {
     firstName <- nonEmptyAlphaNumString
     lastName <- nonEmptyAlphaNumString
   } yield User(userName, firstName, lastName)
+  
+  val createUserPayload: Gen[Any, CreateUserPayload] = for {
+    userName <- nonEmptyAlphaNumString
+    firstName <- nonEmptyAlphaNumString
+    lastName <- nonEmptyAlphaNumString
+  } yield CreateUserPayload(userName, firstName, lastName)
 
 }

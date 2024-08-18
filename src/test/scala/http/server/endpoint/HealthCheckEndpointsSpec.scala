@@ -1,6 +1,6 @@
 package http.server.endpoint
 
-import domain.{DependenciesStatusResponse, StatusResponse}
+import domain.response.{DependenciesStatusResponse, SuccessfulResponse}
 import program.HealthProgramAlg
 import zio.*
 import zio.http.*
@@ -20,12 +20,12 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("HealthCheckEndpoints")(
-      statusEndpointTests,
-      statusDependenciesEndpointTests
+      getStatusEndpointTests,
+      getStatusDependenciesEndpointTests
     )
 
-  private val statusEndpointTests = suite("/status")(
-    test("returns 200 and a proper json body when GET /status is called") {
+  private val getStatusEndpointTests = suite("get /status")(
+    test("returns 200 and a proper json body") {
       for {
         routes <- ZIO.serviceWith[HealthCheckEndpointsAlg](_.routes)
         url <- ZIO.fromEither(URL.decode("/status"))
@@ -35,7 +35,7 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
         )
         response <- routes.runZIO(validStatusRequest)
         body <- response.body.asString
-        expected = StatusResponse("Ok")
+        expected = SuccessfulResponse("Ok")
       } yield assertTrue(
         response.status == Status.Ok,
         body == expected.toJson
@@ -47,7 +47,7 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
     )
   )
 
-  private val statusDependenciesEndpointTests = suite("/status/dependencies")(
+  private val getStatusDependenciesEndpointTests = suite("get /status/dependencies")(
     test("returns 200 with a dependencies map") {
       for {
         routes <- ZIO.serviceWith[HealthCheckEndpointsAlg](_.routes)
