@@ -12,14 +12,13 @@ trait HealthProgramAlg {
 final case class HealthProgram(
                                 private val statusService: StatusServiceAlg
                               ) extends HealthProgramAlg {
-  override def getStatuses: ZIO[ZConnectionPool, Throwable, Map[String, String]] = {
+  override def getStatuses: ZIO[ZConnectionPool, Throwable, Map[String, String]] =
     for {
       _ <- ZIO.logInfo("Getting statuses for dependencies")
       isDatabaseLive <- statusService.isDBLive
     } yield Map {
       "database" -> (if (isDatabaseLive) "Ok" else "Not Ok")
     }
-  }
 }
 
 object HealthProgram {

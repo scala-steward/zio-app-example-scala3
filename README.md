@@ -1,6 +1,6 @@
 # To run the application:
 
-To spin up the postgres dependency:
+### To spin up the postgres dependency:
 ```bash
 docker compose up -d postgres
 ```
@@ -10,7 +10,7 @@ To stop the running postgres container:
 docker compose down postgres
 ```
 
-To run the application:
+### To run the application:
 ```bash
 sbt "runMain runner.Main"
 ```

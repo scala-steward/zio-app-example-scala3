@@ -14,6 +14,7 @@ lazy val zioConfigVersion = "4.0.2"
 lazy val postgresDriverVersion = "42.7.3"
 lazy val flywayVersion = "10.17.1"
 lazy val h2Version = "2.3.232"
+lazy val chimneyVersion = "1.4.0"
 
 
 lazy val root = (project in file("."))
@@ -30,6 +31,7 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-prelude" % zioPreludeVersion,
       "org.postgresql" % "postgresql" % postgresDriverVersion,
       "org.flywaydb" % "flyway-database-postgresql" % flywayVersion,
+      "io.scalaland" %% "chimney" % chimneyVersion
     ) ++ testDependencies,
     scalacOptions ++= Seq("-Yretain-trees"),
     resolvers ++= Resolver.sonatypeOssRepos("snapshots"),

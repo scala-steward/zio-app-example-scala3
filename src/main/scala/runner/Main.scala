@@ -4,10 +4,10 @@ import zio.http.*
 import zio.*
 import _root_.http.server.endpoint.*
 import database.migration.FlywayResource
-import database.repository.StatusRepository
-import database.service.StatusService
+import database.repository.{StatusRepository, UserRepository}
+import database.service.{StatusService, UserService}
 import database.util.ZConnectionPoolWrapper
-import program.HealthProgram
+import program.{HealthProgram, UserProgram}
 import zio.http.endpoint.openapi.*
 import zio.http.codec.PathCodec
 import zio.jdbc.{ZConnectionPool, ZConnectionPoolConfig}
@@ -28,15 +28,16 @@ object Main extends ZIOAppDefault {
       (for {
         _ <- FlywayResource.flywayResource(appConfig.db.jdbcUrl, appConfig.db.user, appConfig.db.password)
         (healthEndpoints, healthRoutes) <- ZIO.serviceWith[HealthCheckEndpointsAlg] { service => (service.endpoints, service.routes) }
+        (userEndpoints, userRoutes) <- ZIO.serviceWith[UserEndpointsAlg] { service => (service.endpoints, service.routes) }
         loggingMiddleware = Middleware.requestLogging(
           logRequestBody = true,
           logResponseBody = true,
           level = logLevel
         )
-        composedEndpoints = healthEndpoints // todo: add new endpoints here
-        openAPI = OpenAPIGen.fromEndpoints(title = "ZIO Http Swagger Example", version = "1.0", composedEndpoints)
+        composedEndpoints = healthEndpoints ++ userEndpoints // todo: add new endpoints here
+        openAPI = OpenAPIGen.fromEndpoints(title = "ZIO application example", version = "1.0", composedEndpoints)
         swaggerRoute = SwaggerUI.routes("docs" / "openapi", openAPI)
-        composedRoutesWithLogging = (healthRoutes ++ swaggerRoute) @@ loggingMiddleware //todo: add new routes here
+        composedRoutesWithLogging = (healthRoutes ++ userRoutes ++ swaggerRoute) @@ loggingMiddleware //todo: add new routes here
         _ <- Server.serve(composedRoutesWithLogging)
       } yield ()).provide(
         Scope.default,
@@ -49,9 +50,13 @@ object Main extends ZIOAppDefault {
           password = appConfig.db.password
         ).orDie,
         StatusRepository.live,
+        UserRepository.live,
         StatusService.live,
+        UserService.live,
         HealthProgram.live,
+        UserProgram.live,
         HealthCheckEndpoints.live,
+        UserEndpoints.live,
         Server.default.orDie
       )
     }.provide(

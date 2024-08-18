@@ -1,6 +1,0 @@
-#Successful Tests
-#Fri Aug 16 00:06:41 BST 2024
-database.DatabaseExampleSpec=1723677163473
-database.StatusRepositoryITSpec=1723763201306
-database.UserRepositoryITSpec=1723763201350
-http.client.APIHttpRequesterSpec=1718817835295

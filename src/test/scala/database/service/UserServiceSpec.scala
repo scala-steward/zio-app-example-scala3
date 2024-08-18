@@ -2,7 +2,9 @@ package database.service
 
 import database.repository.UserRepositoryAlg
 import domain.User
+import domain.error.UsernameDuplicateError
 import http.server.endpoint.HealthCheckEndpointsSpec.{suite, test}
+import org.postgresql.util.{PSQLException, PSQLState}
 import util.generators.Generators
 import zio.*
 import zio.jdbc.{ZConnection, ZConnectionPool}
@@ -38,11 +40,14 @@ object UserServiceSpec extends ZIOSpecDefault with Generators {
     test("calls UserRepository to persist the user - returns failure response") {
       checkN(10)(userGen) { user =>
         (for {
-          insertUser <- ZIO.serviceWith[UserServiceAlg](_.insertUser)
-          result <- insertUser(user).sandbox.flip
-        } yield assertTrue(result.squash.getMessage == "Something went wrong with the db"))
+          underTest <- ZIO.service[UserServiceAlg]
+          error <- underTest.insertUser(user).flip
+        } yield assertTrue(
+          error.isInstanceOf[UsernameDuplicateError],
+          error.getMessage == "Something went wrong with the db")
+          )
           .provide(
-            mockRepo(ZIO.dieMessage("Something went wrong with the db")),
+            mockRepo(ZIO.die(new PSQLException("Something went wrong with the db", PSQLState.UNIQUE_VIOLATION))),
             ZConnectionPool.h2test,
             database.service.UserService.live
           )

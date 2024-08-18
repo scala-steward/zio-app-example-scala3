@@ -1,6 +1,6 @@
 package http.server.endpoint
 
-import domain.{DependenciesStatusResponse, StatusResponse}
+import domain.response.*
 import program.HealthProgramAlg
 import zio.*
 import zio.http.*
@@ -11,7 +11,7 @@ import zio.jdbc.ZConnectionPool
 
 
 trait HealthCheckEndpointsAlg {
-  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: StatusResponse & DependenciesStatusResponse <: Product, None]]
+  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & DependenciesStatusResponse <: Product, None]]
   def routes: Routes[ZConnectionPool, Response]
 }
 
@@ -38,16 +38,16 @@ final case class HealthCheckEndpoints(
    */
 
   private val getStatusEndpoint =
-    Endpoint(Method.GET / Root / "status").out[StatusResponse]
+    Endpoint(Method.GET / Root / "status").out[SuccessfulResponse]
 
   private val getStatusRoute = getStatusEndpoint.implement { _ =>
-    ZIO.succeed(StatusResponse("Ok"))
+    ZIO.succeed(SuccessfulResponse("Ok"))
   }
   
   /***
    * Returns the public endpoints and routes
    */
-  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: StatusResponse & DependenciesStatusResponse <: Product, None]] = List(
+  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & DependenciesStatusResponse <: Product, None]] = List(
     getStatusEndpoint,
     getDependenciesStatusEndpoint
   )
