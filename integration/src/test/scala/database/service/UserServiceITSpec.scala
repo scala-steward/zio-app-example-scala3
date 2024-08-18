@@ -24,7 +24,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
   )
 
   override def spec =
-    suite("StatusRepository")(
+    suite("UserService")(
       test("can successfully insert the user") {
         TestContainerResource.postgresResource.flatMap { postgresContainer =>
           (for {

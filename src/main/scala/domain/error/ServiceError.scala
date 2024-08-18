@@ -7,17 +7,6 @@ import zio.*
 
 sealed abstract class ServiceError(message: String) extends Exception(message)
 
-//final case class ProgramError(message: String) extends ServiceError(message)
-//
-//object ProgramError {
-//  given schemaDepStatus: Schema[ProgramError] = DeriveSchema.gen // used for httpContentCodec
-//
-//  given programErrorEncoder: JsonEncoder[ProgramError] = DeriveJsonEncoder.gen[ProgramError]
-//
-//  given programErrorDecoder: JsonDecoder[ProgramError] = DeriveJsonDecoder.gen[ProgramError]
-//
-//}
-
 final case class ToDomainError(message: String) extends ServiceError(message)
 
 object ToDomainError {

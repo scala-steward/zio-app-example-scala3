@@ -1,10 +1,9 @@
 package program
 
-import database.repository.StatusRepositoryAlg
-import database.service.{StatusServiceAlg, UserServiceAlg}
+import database.service.UserServiceAlg
 import domain.User
 import domain.error.*
-import zio.jdbc.{ZConnection, ZConnectionPool}
+import zio.jdbc.ZConnectionPool
 import zio.{ZIO, ZLayer}
 
 trait UserProgramAlg {

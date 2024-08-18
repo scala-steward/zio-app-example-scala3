@@ -18,8 +18,7 @@ trait HealthCheckEndpointsAlg {
 final case class HealthCheckEndpoints(
                                      private val healthProgram: HealthProgramAlg
                                      ) extends HealthCheckEndpointsAlg {
-
-
+  
   /** *
    * #1 - gets the status of dependencies. i.e. Database etc
    */

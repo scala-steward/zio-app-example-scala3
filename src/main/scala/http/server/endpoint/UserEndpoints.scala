@@ -1,17 +1,16 @@
 package http.server.endpoint
 
+import domain.*
+import domain.error.*
+import domain.payload.*
 import domain.response.*
+import program.*
 import zio.*
 import zio.http.*
 import zio.http.codec.*
 import zio.http.endpoint.Endpoint
 import zio.http.endpoint.EndpointMiddleware.None
 import zio.jdbc.ZConnectionPool
-import zio.json.*
-import domain.payload.*
-import domain.error.*
-import domain.*
-import program.*
 
 trait UserEndpointsAlg {
   def endpoints: List[Endpoint[Unit, CreateUserPayload, ServiceError, SuccessfulResponse, None]]

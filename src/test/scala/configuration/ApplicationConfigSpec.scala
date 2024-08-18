@@ -5,8 +5,6 @@ import zio.config.typesafe.TypesafeConfigProvider
 import zio.test.*
 import zio.test.Assertion.*
 
-import scala.util.{Failure, Success, Try}
-
 object ApplicationConfigSpec extends ZIOSpecDefault {
   override def spec: Spec[Any, Any] =
     suite("ApplicationConfig")(
