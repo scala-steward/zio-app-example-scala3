@@ -7,14 +7,15 @@ import domain.response.*
 import program.*
 import zio.*
 import zio.http.*
+import zio.http.Status.UnprocessableEntity
 import zio.http.codec.*
 import zio.http.endpoint.Endpoint
 import zio.http.endpoint.EndpointMiddleware.None
 import zio.jdbc.ZConnectionPool
 
 trait UserEndpointsAlg {
-  def endpoints: List[Endpoint[Unit, CreateUserPayload, ServiceError, SuccessfulResponse, None]]
-  def routes: Routes[ZConnectionPool, Response]
+  def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]]
+  def routes: Routes[ZConnectionPool, Nothing]
 }
 
 final case class UserEndpoints(
@@ -45,18 +46,32 @@ final case class UserEndpoints(
   }
 
   /** *
+   * #2 - gets all the users that have been stored in the database
+   */
+
+  private val getAllUsersEndpoints =
+    Endpoint(Method.GET / Root / "users")
+      .out[AllUsersResponse](Status.Ok)
+
+  private val getAllUsersRoute = getAllUsersEndpoints.implement { _ =>
+    for {
+      users <- userProgramAlg.getAllUsers.orDie
+    } yield AllUsersResponse(users)
+  }
+
+
+  /** *
    * Returns the public endpoints and routes
    */
-  override def endpoints: List[Endpoint[Unit, CreateUserPayload, ServiceError, SuccessfulResponse, None]] = List(
-    insertUserEndpoints
-    // todo: add retrieval endpoint here
+  override def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]] = List(
+    insertUserEndpoints,
+    getAllUsersEndpoints
   )
 
-  override def routes: Routes[ZConnectionPool, Response] = Routes.fromIterable(List(
-    insertUserRoute
-    // todo: add retrieval route here
+  override def routes: Routes[ZConnectionPool, Nothing] = Routes.fromIterable(List(
+    insertUserRoute,
+    getAllUsersRoute
   ))
-
 }
 
 object UserEndpoints {

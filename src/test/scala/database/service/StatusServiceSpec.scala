@@ -17,10 +17,10 @@ object StatusServiceSpec extends ZIOSpecDefault with Generators {
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("StatusService")(
-      select1Tests
+      isDBLiveTests
     )
 
-  private val select1Tests = suite("select1")(
+  private val isDBLiveTests = suite("isDBLive")(
     test("returns true when the repository responds with Some(1)") {
       (for {
         isDBLive <- ZIO.serviceWithZIO[StatusServiceAlg](_.isDBLive)

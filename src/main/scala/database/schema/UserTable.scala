@@ -1,9 +1,12 @@
 package database.schema
 
+import domain.User
+import domain.payload.CreateUserPayload
 import zio.*
 import zio.jdbc.*
 import zio.schema.Schema.Field
 import zio.schema.{Schema, TypeId}
+import io.scalaland.chimney.dsl.*
 
 final case class UserTable(id: Int, userName: String, firstName: String, lastName: String)
 
@@ -21,4 +24,6 @@ object UserTable {
 
   given userTableJdbcDecoder: JdbcDecoder[UserTable] = JdbcDecoder.fromSchema
 
+  def toDomain: UserTable => Task[User] = payload =>
+    ZIO.attempt(payload.transformInto[User])
 }

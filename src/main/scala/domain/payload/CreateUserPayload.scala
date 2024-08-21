@@ -1,10 +1,10 @@
 package domain.payload
 
 import domain.User
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import zio.schema.{DeriveSchema, Schema}
 import io.scalaland.chimney.dsl.*
 import zio.*
+import zio.json.{DeriveJsonEncoder, JsonEncoder}
+import zio.schema.{DeriveSchema, Schema}
 
 final case class CreateUserPayload(
                                     userName: String,

@@ -13,11 +13,10 @@ import zio.http.codec.PathCodec
 import zio.jdbc.{ZConnectionPool, ZConnectionPoolConfig}
 import configuration.{ApplicationConfig, ApplicationConfigAlg}
 import zio.config.typesafe.TypesafeConfigProvider
-
+import PathCodec.*
 
 object Main extends ZIOAppDefault {
 
-  import PathCodec.*
 
   private val logLevel: Status => LogLevel = (incomingStatus: Status) =>
     if (incomingStatus.isSuccess) LogLevel.Info

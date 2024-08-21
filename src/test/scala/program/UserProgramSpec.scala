@@ -10,9 +10,14 @@ import zio.test.*
 
 object UserProgramSpec extends ZIOSpecDefault with Generators {
 
-  private def mockUserServiceAlg(response: ZIO[ZConnectionPool, ServiceError, Unit]) = ZLayer.succeed(
+  private def mockUserServiceAlg(
+                                  insertResponse: ZIO[ZConnectionPool, ServiceError, Unit],
+                                  getUsersResponse: ZIO[ZConnectionPool, ServiceError, Chunk[User]]
+                                ) = ZLayer.succeed(
     new UserServiceAlg {
-      override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] = response
+      override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] = insertResponse
+
+      override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = getUsersResponse
     }
   )
 
@@ -29,7 +34,10 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
         } yield assertCompletes
       }
     }.provide(
-      mockUserServiceAlg(ZIO.unit),
+      mockUserServiceAlg(
+        ZIO.unit,
+        ZIO.succeed(Chunk.empty)
+      ),
       UserProgram.live,
       ZConnectionPool.h2test
     ),
@@ -43,7 +51,10 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
         )
       }
     }.provide(
-      mockUserServiceAlg(ZIO.fail(UsernameDuplicateError("username is not unique error"))),
+      mockUserServiceAlg(
+        ZIO.fail(UsernameDuplicateError("username is not unique error")),
+        ZIO.succeed(Chunk.empty)
+      ),
       UserProgram.live,
       ZConnectionPool.h2test
     )
