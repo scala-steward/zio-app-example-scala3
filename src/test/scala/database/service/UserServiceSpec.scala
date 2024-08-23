@@ -1,9 +1,9 @@
 package database.service
 
 import database.repository.UserRepositoryAlg
-import database.schema.UserTable
+import database.schema.UserTableRow
 import domain.User
-import domain.error.UsernameDuplicateError
+import domain.error.{DatabaseTransactionError, UsernameDuplicateError}
 import http.server.endpoint.HealthCheckEndpointsSpec.{suite, test}
 import org.postgresql.util.{PSQLException, PSQLState}
 import util.generators.Generators
@@ -14,11 +14,11 @@ import zio.test.*
 
 object UserServiceSpec extends ZIOSpecDefault with Generators {
 
-  private def mockRepo(insertResponse: URIO[ZConnection, Long], getUsersResponse: URIO[ZConnection, Chunk[UserTable]]) = ZLayer.succeed(
+  private def mockRepo(insertResponse: URIO[ZConnection, Long], getUsersResponse: URIO[ZConnection, Chunk[UserTableRow]]) = ZLayer.succeed(
     new UserRepositoryAlg:
       override def insertUser(user: User): URIO[ZConnection, Long] = insertResponse
 
-      override def getAllUsers: URIO[ZConnection, Chunk[UserTable]] = getUsersResponse
+      override def getAllUsers: URIO[ZConnection, Chunk[UserTableRow]] = getUsersResponse
   )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
@@ -85,10 +85,10 @@ object UserServiceSpec extends ZIOSpecDefault with Generators {
     },
     test("calls UserRepository to get all the persisted users - returns failure response") {
       (for {
-        error <- ZIO.serviceWithZIO[UserServiceAlg](_.getAllUsers).sandbox.flip
+        error <- ZIO.serviceWithZIO[UserServiceAlg](_.getAllUsers).flip
       } yield assertTrue(
-        error.squash.getMessage == "Something went wrong whilst getting all the users")
-        )
+        error == DatabaseTransactionError("Something went wrong whilst getting all the users")
+        ))
         .provide(
           mockRepo(
             ZIO.succeed(1L),

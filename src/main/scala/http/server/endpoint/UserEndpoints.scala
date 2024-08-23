@@ -7,7 +7,6 @@ import domain.response.*
 import program.*
 import zio.*
 import zio.http.*
-import zio.http.Status.UnprocessableEntity
 import zio.http.codec.*
 import zio.http.endpoint.Endpoint
 import zio.http.endpoint.EndpointMiddleware.None
@@ -19,13 +18,12 @@ trait UserEndpointsAlg {
 }
 
 final case class UserEndpoints(
-                              private val userProgramAlg: UserProgramAlg
+                              private val userProgram: UserProgramAlg
                               ) extends UserEndpointsAlg {
   
   /** *
    * #1 - inserts the user provided in the request payload
    */
-
 // https://github.com/zio/zio-http/blob/283934e5282fc7dbb8f11f955d5bd733030005e2/zio-http-example/src/main/scala/example/endpoint/style/DeclarativeProgrammingExample.scala#L37
 // https://github.com/zio/zio-http/blob/283934e5282fc7dbb8f11f955d5bd733030005e2/zio-http-example/src/main/scala/example/endpoint/EndpointWithMultipleErrorsUsingEither.scala#L46
 // https://github.com/zio/zio-http/blob/283934e5282fc7dbb8f11f955d5bd733030005e2/zio-http-example/src/main/scala/example/endpoint/EndpointWithMultipleUnifiedErrors.scala
@@ -35,13 +33,14 @@ final case class UserEndpoints(
       .out[SuccessfulResponse](Status.Created)
       .outErrors[ServiceError](
         HttpCodec.error[ToDomainError](Status.UnprocessableEntity),
-        HttpCodec.error[UsernameDuplicateError](Status.Conflict)
+        HttpCodec.error[UsernameDuplicateError](Status.Conflict),
+        HttpCodec.error[DatabaseTransactionError](Status.InternalServerError)
       )
   
   private val insertUserRoute = insertUserEndpoints.implement { (createUserPayload: CreateUserPayload) =>
     for {
       user <- CreateUserPayload.toDomain(createUserPayload).mapError(t => ToDomainError(t.getMessage))
-      _ <- userProgramAlg.insertUser(user)
+      _ <- userProgram.insertUser(user)
     }  yield SuccessfulResponse("success")
   }
 
@@ -52,10 +51,14 @@ final case class UserEndpoints(
   private val getAllUsersEndpoints =
     Endpoint(Method.GET / Root / "users")
       .out[AllUsersResponse](Status.Ok)
+      .outErrors[ServiceError](
+        HttpCodec.error[ToDomainError](Status.InternalServerError), // failure when trying to convert UserTableRow to User domain
+        HttpCodec.error[DatabaseTransactionError](Status.InternalServerError) // transaction failure result in 500
+      )
 
   private val getAllUsersRoute = getAllUsersEndpoints.implement { _ =>
     for {
-      users <- userProgramAlg.getAllUsers.orDie
+      users <- userProgram.getAllUsers
     } yield AllUsersResponse(users)
   }
 
@@ -76,6 +79,6 @@ final case class UserEndpoints(
 
 object UserEndpoints {
   val live: ZLayer[UserProgramAlg, Nothing, UserEndpointsAlg] = ZLayer.fromFunction(
-    (userProgramAlg: UserProgramAlg) => UserEndpoints.apply(userProgramAlg)
+    (userProgram: UserProgramAlg) => UserEndpoints.apply(userProgram)
   )
 }

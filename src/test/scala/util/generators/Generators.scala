@@ -1,6 +1,6 @@
 package util.generators
 
-import database.schema.UserTable
+import database.schema.UserTableRow
 import domain.User
 import domain.payload.CreateUserPayload
 import zio.Chunk
@@ -16,14 +16,14 @@ trait Generators {
     lastName <- nonEmptyAlphaNumString
   } yield User(userName, firstName, lastName)
   
-  val userTableGen: Gen[Any, UserTable] = for {
+  val userTableGen: Gen[Any, UserTableRow] = for {
     id <- Gen.int
     userName <- nonEmptyAlphaNumString
     firstName <- nonEmptyAlphaNumString
     lastName <- nonEmptyAlphaNumString
-  } yield UserTable(id, userName, firstName, lastName)
+  } yield UserTableRow(id, userName, firstName, lastName)
 
-  val chunkUserTableGen: Gen[Any, Chunk[UserTable]] = for {
+  val chunkUserTableGen: Gen[Any, Chunk[UserTableRow]] = for {
     chunk <- Gen.chunkOfBounded(1, 45)(userTableGen)
   } yield chunk
   

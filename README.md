@@ -15,15 +15,8 @@ docker compose down postgres
 sbt "runMain runner.Main"
 ```
 
-and
-
-```bash
-curl --location 'http://localhost:8080/status'
-````
-or
-```bash
-curl --location 'http://localhost:8080/hello'
-```
-
-## To reach the open api/swagger docs use this url: 
+## To reach the open api/swagger documentation, use this url: 
 `http://localhost:8080/docs/openapi`
+
+# Todo:
+* add scala-steward

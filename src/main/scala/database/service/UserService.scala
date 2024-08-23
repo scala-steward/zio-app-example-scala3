@@ -1,16 +1,15 @@
 package database.service
 
 import database.repository.UserRepositoryAlg
-import database.schema.UserTable
+import database.schema.UserTableRow
 import domain.User
-import domain.error.{ServiceError, ToDomainError, UsernameDuplicateError}
+import domain.error.*
 import org.postgresql.util.{PSQLException, PSQLState}
 import zio.*
 import zio.jdbc.{ZConnectionPool, transaction}
 
 trait UserServiceAlg {
   def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit]
-
   def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]]
 }
 
@@ -20,28 +19,31 @@ final case class UserService(
 
   override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] = transaction(
     userRepository.insertUser(user).unit
-  )
-    .mapErrorCause { cause =>
+  ).mapErrorCause { cause =>
       cause.squash match {
         case e: PSQLException if e.getSQLState == PSQLState.UNIQUE_VIOLATION.getState =>
           Cause.fail(UsernameDuplicateError(e.getMessage))
+        case e => 
+          Cause.fail(DatabaseTransactionError(e.getMessage))
       }
     }
 
   override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = transaction(
     for {
       userTableChunk <- userRepository.getAllUsers
-      // maybe bring in cats traverse/sequence as a dependency
+      // maybe bring in cats traverse/sequence
       userChunk <- ZIO.foreach(
         userTableChunk.map(chunk =>
-          UserTable.toDomain(chunk).mapError(t => ToDomainError(t.getMessage))
+          UserTableRow.toDomain(chunk).mapError(t => ToDomainError(t.getMessage))
         ))(identity)
     } yield userChunk
-  ).refineToOrDie[ServiceError]
+  ).mapErrorCause{ cause =>
+    Cause.fail(DatabaseTransactionError(cause.squash.getMessage))
+  }
 
 }
 
 object UserService {
   val live: ZLayer[UserRepositoryAlg, Nothing, UserServiceAlg] =
-    ZLayer.fromFunction((userRepositoryAlg: UserRepositoryAlg) => UserService(userRepositoryAlg))
+    ZLayer.fromFunction((userRepository: UserRepositoryAlg) => UserService(userRepository))
 }

@@ -1,8 +1,7 @@
 package database.repository
 
 import _root_.util.*
-import database.repository.{UserRepository, UserRepositoryAlg}
-import database.schema.UserTable
+import database.schema.UserTableRow
 import database.util.ZConnectionPoolWrapper
 import domain.{PortDetails, User}
 import org.flywaydb.core.api.output.ValidateResult
@@ -30,7 +29,7 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
             flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
             validationResult <- ZIO.attempt(flyway.validateWithResult())
             user = User("LimbMissing", "David", "Pratt")
-            selectSqlFrag = sql"select * from user_table".query[UserTable]
+            selectSqlFrag = sql"select * from user_table".query[UserTableRow]
             underTest <- transaction(
               insertUser(user) *> selectSqlFrag.selectAll
             )
@@ -59,7 +58,7 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
             user1 = User("LimbMissing1", "David", "Pratt")
             user2 = User("LimbMissing2", "David", "Pratt")
             user3 = User("LimbMissing3", "David", "Pratt")
-            underTest: Chunk[UserTable] <- transaction(
+            underTest: Chunk[UserTableRow] <- transaction(
               insertUser(user1) *> insertUser(user2) *> insertUser(user3) *> selectAll
             )
           } yield assertTrue(

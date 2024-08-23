@@ -41,7 +41,7 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
       UserProgram.live,
       ZConnectionPool.h2test
     ),
-    test("returns database service error when the insertion is not successful") {
+    test("returns database service error when the insertion is not successful due to a username duplication error") {
       checkN(10)(userGen) { user =>
         for {
           insertUser <- ZIO.serviceWith[UserProgramAlg](_.insertUser)

@@ -1,19 +1,19 @@
 package runner
 
-import zio.http.*
-import zio.*
 import _root_.http.server.endpoint.*
+import configuration.{ApplicationConfig, ApplicationConfigAlg}
 import database.migration.FlywayResource
 import database.repository.{StatusRepository, UserRepository}
 import database.service.{StatusService, UserService}
 import database.util.ZConnectionPoolWrapper
 import program.{HealthProgram, UserProgram}
-import zio.http.endpoint.openapi.*
-import zio.http.codec.PathCodec
-import zio.jdbc.{ZConnectionPool, ZConnectionPoolConfig}
-import configuration.{ApplicationConfig, ApplicationConfigAlg}
+import zio.*
 import zio.config.typesafe.TypesafeConfigProvider
-import PathCodec.*
+import zio.http.*
+import zio.http.codec.PathCodec
+import zio.http.codec.PathCodec.*
+import zio.http.endpoint.openapi.*
+import zio.jdbc.{ZConnectionPool, ZConnectionPoolConfig}
 
 object Main extends ZIOAppDefault {
 
@@ -25,7 +25,7 @@ object Main extends ZIOAppDefault {
   override def run: ZIO[Any, Throwable, Unit] =
     ZIO.serviceWithZIO[ApplicationConfigAlg](_.hoconConfig).flatMap { (appConfig: ApplicationConfig.HoconConfig) =>
       (for {
-        _ <- FlywayResource.flywayResource(appConfig.db.jdbcUrl, appConfig.db.user, appConfig.db.password)
+        _ <- FlywayResource.flywayResource(appConfig.db.jdbcUrl, appConfig.db.user, appConfig.db.password) // run migrations
         (healthEndpoints, healthRoutes) <- ZIO.serviceWith[HealthCheckEndpointsAlg] { service => (service.endpoints, service.routes) }
         (userEndpoints, userRoutes) <- ZIO.serviceWith[UserEndpointsAlg] { service => (service.endpoints, service.routes) }
         loggingMiddleware = Middleware.requestLogging(
@@ -40,6 +40,7 @@ object Main extends ZIOAppDefault {
         _ <- Server.serve(composedRoutesWithLogging)
       } yield ()).provide(
         Scope.default,
+        Server.default,
         ZLayer.succeed(ZConnectionPoolConfig.default),
         ZConnectionPoolWrapper.connectionPool(
           host = appConfig.db.host,
@@ -47,7 +48,7 @@ object Main extends ZIOAppDefault {
           database = appConfig.db.database,
           user = appConfig.db.user,
           password = appConfig.db.password
-        ).orDie,
+        ),
         StatusRepository.live,
         UserRepository.live,
         StatusService.live,
@@ -55,11 +56,10 @@ object Main extends ZIOAppDefault {
         HealthProgram.live,
         UserProgram.live,
         HealthCheckEndpoints.live,
-        UserEndpoints.live,
-        Server.default.orDie
+        UserEndpoints.live
       )
     }.provide(
-      ApplicationConfig.live,
-      ZLayer.succeed(TypesafeConfigProvider.fromResourcePath())
-    )
+      ZLayer.succeed(TypesafeConfigProvider.fromResourcePath()),
+      ApplicationConfig.live
+  )
 }

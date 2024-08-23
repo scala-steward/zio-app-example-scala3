@@ -1,7 +1,7 @@
-ThisBuild / scalaVersion := "3.4.2"
+ThisBuild / scalaVersion := "3.5.0"
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / organization := "com.example"
-ThisBuild / organizationName := "example"
+ThisBuild / organization := "com.dpratt747"
+ThisBuild / organizationName := "dpratt747"
 
 lazy val zioVersion = "2.1.6"
 lazy val zioHttpVersion = "3.0.0-RC9"
@@ -19,7 +19,7 @@ lazy val chimneyVersion = "1.4.0"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "zio-app-example1-scala3",
+    name := "zio-app-example-scala3",
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % zioVersion,
       "dev.zio" %% "zio-http" % zioHttpVersion,

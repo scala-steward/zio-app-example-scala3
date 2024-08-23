@@ -2,6 +2,7 @@ package program
 
 import database.repository.StatusRepositoryAlg
 import database.service.StatusServiceAlg
+import domain.error.ServiceError
 import zio.jdbc.{ZConnection, ZConnectionPool}
 import zio.{ZIO, ZLayer}
 
@@ -23,6 +24,6 @@ final case class HealthProgram(
 
 object HealthProgram {
   val live: ZLayer[StatusServiceAlg, Nothing, HealthProgramAlg] = ZLayer.fromFunction(
-    (statusServiceAlg: StatusServiceAlg) => HealthProgram.apply(statusServiceAlg)
+    (statusService: StatusServiceAlg) => HealthProgram.apply(statusService)
   )
 }

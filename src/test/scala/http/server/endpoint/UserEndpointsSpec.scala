@@ -61,7 +61,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
       UserEndpoints.live,
       ZConnectionPool.h2test
     ),
-    test("returns 500 when the program fails") {
+    test("returns 500 when the program fibre fails") {
       checkN(1)(createUserPayload) { createUserPayload =>
         for {
           routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
@@ -86,8 +86,6 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
     )
   )
 
-
-  // todo: add tests
   private val getAllUsersEndpointTests = suite("get /users")(
     test("returns 200 when a request is made to get all users and no error occurs") {
       for {

@@ -1,8 +1,9 @@
 package database.service
 
-import zio.{ZIO, ZLayer}
+import zio.{Cause, ZIO, ZLayer}
 import database.repository.{StatusRepositoryAlg, UserRepositoryAlg}
 import domain.User
+import domain.error.{DatabaseTransactionError, ServiceError}
 import zio.jdbc.{ZConnectionPool, transaction}
 
 trait StatusServiceAlg {

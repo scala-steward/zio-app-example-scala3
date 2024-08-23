@@ -12,17 +12,17 @@ trait UserProgramAlg {
 }
 
 final case class UserProgram(
-                              private val userServiceAlg: UserServiceAlg
+                              private val userService: UserServiceAlg
                             ) extends UserProgramAlg {
   
   override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] =
-    userServiceAlg.insertUser(user)
+    userService.insertUser(user)
 
-  override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = userServiceAlg.getAllUsers
+  override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = userService.getAllUsers
 }
 
 object UserProgram {
   val live: ZLayer[UserServiceAlg, Nothing, UserProgramAlg] = ZLayer.fromFunction(
-    (userServiceAlg: UserServiceAlg) => UserProgram.apply(userServiceAlg)
+    (userService: UserServiceAlg) => UserProgram.apply(userService)
   )
 }

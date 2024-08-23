@@ -1,13 +1,13 @@
 package database.repository
 
-import database.schema.UserTable
+import database.schema.UserTableRow
 import domain.User
 import zio.jdbc.{ZConnection, sqlInterpolator}
 import zio.{Chunk, URIO, ZIO, ZLayer}
 
 trait UserRepositoryAlg {
   def insertUser(user: User): URIO[ZConnection, Long]
-  def getAllUsers: URIO[ZConnection, Chunk[UserTable]]
+  def getAllUsers: URIO[ZConnection, Chunk[UserTableRow]]
 }
 
 final case class UserRepository() extends UserRepositoryAlg {
@@ -17,8 +17,8 @@ final case class UserRepository() extends UserRepositoryAlg {
         .insert
         .orDie
 
-  override def getAllUsers: URIO[ZConnection, Chunk[UserTable]] = ZIO.logInfo("Retrieving all users from the user_table") *>
-    sql"select * from user_table".query[UserTable].selectAll.orDie
+  override def getAllUsers: URIO[ZConnection, Chunk[UserTableRow]] = ZIO.logInfo("Retrieving all users from the user_table") *>
+    sql"select * from user_table".query[UserTableRow].selectAll.orDie
 }
 
 object UserRepository {

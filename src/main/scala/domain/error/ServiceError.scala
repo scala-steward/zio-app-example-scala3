@@ -21,6 +21,17 @@ object ToDomainError {
   given toDomainErrorDecoder: JsonDecoder[ToDomainError] = DeriveJsonDecoder.gen[ToDomainError]
 }
 
+final case class DatabaseTransactionError(message: String) extends ServiceError(message)
+
+object DatabaseTransactionError {
+  given toDomainErrorSchema: Schema[DatabaseTransactionError] = DeriveSchema.gen
+
+  given toDomainErrorEncoder: JsonEncoder[DatabaseTransactionError] = DeriveJsonEncoder.gen[DatabaseTransactionError]
+
+  given toDomainErrorDecoder: JsonDecoder[DatabaseTransactionError] = DeriveJsonDecoder.gen[DatabaseTransactionError]
+}
+
+
 final case class UsernameDuplicateError(message: String) extends ServiceError(message)
 
 object UsernameDuplicateError {
