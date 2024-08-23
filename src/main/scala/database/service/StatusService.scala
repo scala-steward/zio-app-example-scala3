@@ -1,9 +1,7 @@
 package database.service
 
-import zio.{Cause, ZIO, ZLayer}
-import database.repository.{StatusRepositoryAlg, UserRepositoryAlg}
-import domain.User
-import domain.error.{DatabaseTransactionError, ServiceError}
+import database.repository.*
+import zio.*
 import zio.jdbc.{ZConnectionPool, transaction}
 
 trait StatusServiceAlg {
@@ -13,7 +11,7 @@ trait StatusServiceAlg {
 final case class StatusService(
                                 private val statusRepository: StatusRepositoryAlg
                               ) extends StatusServiceAlg {
-  
+
   override def isDBLive: ZIO[ZConnectionPool, Throwable, Boolean] = transaction(
     statusRepository.select1().map(_.isDefined)
   )

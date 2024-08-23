@@ -1,11 +1,11 @@
 package http.server.endpoint
 
-import domain.error.{DatabaseTransactionError, ServiceError, ToDomainError}
+import domain.error.*
 import domain.response.*
 import program.HealthProgramAlg
 import zio.*
 import zio.http.*
-import zio.http.codec.{HttpCodec, HttpContentCodec}
+import zio.http.codec.*
 import zio.http.endpoint.Endpoint
 import zio.http.endpoint.EndpointMiddleware.None
 import zio.jdbc.ZConnectionPool
