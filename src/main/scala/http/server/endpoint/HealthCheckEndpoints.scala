@@ -12,28 +12,27 @@ import zio.jdbc.ZConnectionPool
 
 
 trait HealthCheckEndpointsAlg {
-  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & DependenciesStatusResponse <: Product, None]]
+  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & Map[String, String] <: Equals, None]]
+
   def routes: Routes[ZConnectionPool, Response]
 }
 
 final case class HealthCheckEndpoints(
-                                     private val healthProgram: HealthProgramAlg
+                                       private val healthProgram: HealthProgramAlg
                                      ) extends HealthCheckEndpointsAlg {
-  
-  /** *
+
+  /**
    * #1 - gets the status of dependencies. i.e. Database etc
    */
 
   private val getDependenciesStatusEndpoint =
-    Endpoint(Method.GET / Root / "status" / "dependencies").out[DependenciesStatusResponse]
+    Endpoint(Method.GET / Root / "status" / "dependencies").out[Map[String, String]]
 
   private val getDependenciesStatusRoute = getDependenciesStatusEndpoint.implement { _ =>
-    for {
-      depStatusMap <- healthProgram.getStatuses.orDie
-    } yield DependenciesStatusResponse(depStatusMap)
+    healthProgram.getStatuses.orDie
   }
 
-  /***
+  /**
    * Second set of endpoints and routes
    */
 
@@ -43,11 +42,11 @@ final case class HealthCheckEndpoints(
   private val getStatusRoute = getStatusEndpoint.implement { _ =>
     ZIO.succeed(SuccessfulResponse("Ok"))
   }
-  
-  /***
+
+  /**
    * Returns the public endpoints and routes
    */
-  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & DependenciesStatusResponse <: Product, None]] = List(
+  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & Map[String, String] <: Equals, None]] = List(
     getStatusEndpoint,
     getDependenciesStatusEndpoint
   )

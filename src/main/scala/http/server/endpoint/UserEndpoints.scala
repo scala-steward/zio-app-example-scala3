@@ -14,7 +14,7 @@ import zio.http.endpoint.EndpointMiddleware.None
 import zio.jdbc.ZConnectionPool
 
 trait UserEndpointsAlg {
-  def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit & Dependency, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]]
+  def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]]
 
   def routes: Routes[ZConnectionPool, Nothing]
 }
@@ -88,7 +88,7 @@ final case class UserEndpoints(
   /**
    * Returns the public endpoints and routes
    */
-  override def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit & Dependency, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]] = List(
+  override def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]] = List(
     insertUserEndpoint,
     getAllUsersEndpoint,
     deleteUserEndpoint

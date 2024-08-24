@@ -1,6 +1,6 @@
 package http.server.endpoint
 
-import domain.response.{DependenciesStatusResponse, SuccessfulResponse}
+import domain.response.*
 import program.HealthProgramAlg
 import zio.*
 import zio.http.*
@@ -58,7 +58,7 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
           method = Method.GET,
           url = url
         )
-        expected = DependenciesStatusResponse(Map("dependency" -> "Ok"))
+        expected = Map("dependency" -> "Ok")
         response <- routes.runZIO(validStatusRequest)
         body <- response.body.asString
       } yield assertTrue(
