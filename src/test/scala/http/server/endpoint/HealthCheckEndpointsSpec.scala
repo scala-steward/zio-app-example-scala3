@@ -42,7 +42,9 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
       )
     }.provide(
       ZConnectionPool.h2test,
-      healthProgramMock(ZIO.succeed(Map.empty)),
+      healthProgramMock(
+        getStatusesResponse = ZIO.succeed(Map.empty)
+      ),
       HealthCheckEndpoints.live
     )
   )
@@ -66,9 +68,11 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
     }
   ).provide(
     ZConnectionPool.h2test,
-    healthProgramMock(ZIO.succeed(Map(
-      "dependency" -> "Ok"
-    ))),
+    healthProgramMock(
+      getStatusesResponse = ZIO.succeed(Map(
+        "dependency" -> "Ok"
+      ))
+    ),
     HealthCheckEndpoints.live,
   )
 

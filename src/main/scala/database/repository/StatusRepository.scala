@@ -1,8 +1,8 @@
 package database.repository
 
 import domain.User
-import zio.jdbc.{ZConnection, sqlInterpolator}
 import zio.*
+import zio.jdbc.{ZConnection, sqlInterpolator}
 
 trait StatusRepositoryAlg {
   def select1(): URIO[ZConnection, Option[Int]]
@@ -11,10 +11,10 @@ trait StatusRepositoryAlg {
 final case class StatusRepository() extends StatusRepositoryAlg {
   override def select1(): URIO[ZConnection, Option[Int]] =
     ZIO.logInfo(s"Selecting 1 from database") *>
-    sql"select 1"
-      .query[Int]
-      .selectOne
-      .orDie
+      sql"select 1"
+        .query[Int]
+        .selectOne
+        .orDie
 }
 
 object StatusRepository {

@@ -12,13 +12,13 @@ final case class User(
                      )
 
 object User {
-//  given schemaDepStatus: Schema[User] = DeriveSchema.gen // used for httpContentCodec
+  //  given schemaDepStatus: Schema[User] = DeriveSchema.gen // used for httpContentCodec
 
-  /** *
+  /**
    * json encoding/decoding
    */
   given userEncoder: JsonEncoder[User] = DeriveJsonEncoder.gen[User]
 
   given userDecoder: JsonDecoder[User] = DeriveJsonDecoder.gen[User]
-  
+
 }

@@ -10,9 +10,9 @@ import zio.test.*
 
 object StatusServiceSpec extends ZIOSpecDefault with Generators {
 
-  private def mockRepo(select1Resposnse: URIO[ZConnection, Option[Int]]) = ZLayer.succeed(
+  private def mockRepo(select1Response: URIO[ZConnection, Option[Int]]) = ZLayer.succeed(
     new StatusRepositoryAlg:
-      override def select1(): URIO[ZConnection, Option[Int]] = select1Resposnse
+      override def select1(): URIO[ZConnection, Option[Int]] = select1Response
   )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
@@ -26,7 +26,9 @@ object StatusServiceSpec extends ZIOSpecDefault with Generators {
         isDBLive <- ZIO.serviceWithZIO[StatusServiceAlg](_.isDBLive)
       } yield assertTrue(isDBLive))
         .provide(
-          mockRepo(ZIO.succeed(Option(1))),
+          mockRepo(
+            select1Response = ZIO.succeed(Option(1))
+          ),
           ZConnectionPool.h2test,
           StatusService.live
         )
@@ -36,7 +38,9 @@ object StatusServiceSpec extends ZIOSpecDefault with Generators {
         isDBLive <- ZIO.serviceWithZIO[StatusServiceAlg](_.isDBLive)
       } yield assertTrue(!isDBLive))
         .provide(
-          mockRepo(ZIO.none),
+          mockRepo(
+            select1Response = ZIO.none
+          ),
           ZConnectionPool.h2test,
           StatusService.live
         )

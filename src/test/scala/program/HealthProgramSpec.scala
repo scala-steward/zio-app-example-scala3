@@ -27,7 +27,9 @@ object HealthProgramSpec extends ZIOSpecDefault {
         statuses == expected
       )
     }.provide(
-      mockStatusServiceAlg(ZIO.succeed(true)),
+      mockStatusServiceAlg(
+        response = ZIO.succeed(true)
+      ),
       HealthProgram.live,
       ZConnectionPool.h2test
     ),
@@ -39,7 +41,9 @@ object HealthProgramSpec extends ZIOSpecDefault {
         statuses == expected
       )
     }.provide(
-      mockStatusServiceAlg(ZIO.succeed(false)),
+      mockStatusServiceAlg(
+        response = ZIO.succeed(false)
+      ),
       HealthProgram.live,
       ZConnectionPool.h2test
     )

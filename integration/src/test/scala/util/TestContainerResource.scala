@@ -15,7 +15,7 @@ object TestContainerResource {
 
   val postgresResource: ZIO[Any & Scope, Throwable, org.testcontainers.containers.PostgreSQLContainer[?]] =
     ZIO.acquireRelease(initAndStartPostgres)(postgresSQLContainer =>
-        ZIO.attempt(postgresSQLContainer.stop()).tapError( e =>
+        ZIO.attempt(postgresSQLContainer.stop()).tapError(e =>
           ZIO.logError(s"Something went wrong ${e.getMessage}")
         ).orDie
       )

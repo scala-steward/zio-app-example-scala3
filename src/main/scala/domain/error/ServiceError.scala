@@ -1,9 +1,8 @@
 package domain.error
 
-import zio.schema.*
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
-import zio.schema.{DeriveSchema, Schema}
 import zio.*
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.schema.*
 
 sealed abstract class ServiceError(message: String) extends Exception(message)
 

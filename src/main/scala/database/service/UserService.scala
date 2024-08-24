@@ -10,7 +10,10 @@ import zio.jdbc.{ZConnectionPool, transaction}
 
 trait UserServiceAlg {
   def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit]
+
   def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]]
+
+  def deleteUserByUsername(userName: String): ZIO[ZConnectionPool, ServiceError, Unit]
 }
 
 final case class UserService(
@@ -20,13 +23,13 @@ final case class UserService(
   override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] = transaction(
     userRepository.insertUser(user).unit
   ).mapErrorCause { cause =>
-      cause.squash match {
-        case e: PSQLException if e.getSQLState == PSQLState.UNIQUE_VIOLATION.getState =>
-          Cause.fail(UsernameDuplicateError(e.getMessage))
-        case e => 
-          Cause.fail(DatabaseTransactionError(e.getMessage))
-      }
+    cause.squash match {
+      case e: PSQLException if e.getSQLState == PSQLState.UNIQUE_VIOLATION.getState =>
+        Cause.fail(UsernameDuplicateError(e.getMessage))
+      case e =>
+        Cause.fail(DatabaseTransactionError(e.getMessage))
     }
+  }
 
   override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = transaction(
     for {
@@ -37,7 +40,13 @@ final case class UserService(
           UserTableRow.toDomain(chunk).mapError(t => ToDomainError(t.getMessage))
         ))(identity)
     } yield userChunk
-  ).mapErrorCause{ cause =>
+  ).mapErrorCause { cause =>
+    Cause.fail(DatabaseTransactionError(cause.squash.getMessage))
+  }
+
+  override def deleteUserByUsername(userName: String): ZIO[ZConnectionPool, ServiceError, Unit] = transaction(
+    userRepository.deleteUserByUsername(userName).unit
+  ).mapErrorCause { cause =>
     Cause.fail(DatabaseTransactionError(cause.squash.getMessage))
   }
 

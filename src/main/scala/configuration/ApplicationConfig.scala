@@ -1,10 +1,9 @@
 package configuration
 
 import configuration.ApplicationConfig.*
-
-import zio.{Config, ConfigProvider, IO, ZLayer}
 import zio.config.*
 import zio.config.magnolia.*
+import zio.{Config, ConfigProvider, IO, ZLayer}
 
 
 trait ApplicationConfigAlg {
@@ -31,7 +30,7 @@ object ApplicationConfig {
                                    password: String,
                                    database: String
                                  )
-  
+
   final case class HoconConfig(
                                 db: DatabaseConfig
                               )

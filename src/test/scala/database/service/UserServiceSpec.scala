@@ -14,17 +14,24 @@ import zio.test.*
 
 object UserServiceSpec extends ZIOSpecDefault with Generators {
 
-  private def mockRepo(insertResponse: URIO[ZConnection, Long], getUsersResponse: URIO[ZConnection, Chunk[UserTableRow]]) = ZLayer.succeed(
+  private def mockUserRepo(
+                        insertResponse: URIO[ZConnection, Long],
+                        getUsersResponse: URIO[ZConnection, Chunk[UserTableRow]],
+                        deleteUserResponse: URIO[ZConnection, Long]
+                      ) = ZLayer.succeed(
     new UserRepositoryAlg:
       override def insertUser(user: User): URIO[ZConnection, Long] = insertResponse
 
       override def getAllUsers: URIO[ZConnection, Chunk[UserTableRow]] = getUsersResponse
+
+      override def deleteUserByUsername(userName: String): URIO[ZConnection, Long] = deleteUserResponse
   )
 
   override def spec: Spec[TestEnvironment & Scope, Any] =
     suite("UserService")(
       insertUserTests,
-      getAllUsersTest
+      getAllUsersTest,
+      deleteUserByUsernameTest
     )
 
   private val insertUserTests = suite("insertUser")(
@@ -35,9 +42,10 @@ object UserServiceSpec extends ZIOSpecDefault with Generators {
           _ <- insertUser(user)
         } yield assertCompletes)
           .provide(
-            mockRepo(
-              ZIO.succeed(1L),
-              ZIO.succeed(Chunk.empty)
+            mockUserRepo(
+              insertResponse = ZIO.succeed(1L),
+              getUsersResponse = ZIO.succeed(Chunk.empty),
+              deleteUserResponse = ZIO.succeed(0L)
             ),
             ZConnectionPool.h2test,
             database.service.UserService.live
@@ -54,9 +62,10 @@ object UserServiceSpec extends ZIOSpecDefault with Generators {
           error.getMessage == "Something went wrong with the db")
           )
           .provide(
-            mockRepo(
-              ZIO.die(new PSQLException("Something went wrong with the db", PSQLState.UNIQUE_VIOLATION)),
-              ZIO.succeed(Chunk.empty)
+            mockUserRepo(
+              insertResponse = ZIO.die(new PSQLException("Something went wrong with the db", PSQLState.UNIQUE_VIOLATION)),
+              getUsersResponse = ZIO.succeed(Chunk.empty),
+              deleteUserResponse = ZIO.succeed(0L)
             ),
             ZConnectionPool.h2test,
             database.service.UserService.live
@@ -74,9 +83,10 @@ object UserServiceSpec extends ZIOSpecDefault with Generators {
           users.length == userTableChunk.length
         ))
           .provide(
-            mockRepo(
-              ZIO.succeed(1L),
-              ZIO.succeed(userTableChunk)
+            mockUserRepo(
+              insertResponse = ZIO.succeed(1L),
+              getUsersResponse = ZIO.succeed(userTableChunk),
+              deleteUserResponse = ZIO.succeed(0L)
             ),
             ZConnectionPool.h2test,
             database.service.UserService.live
@@ -88,11 +98,45 @@ object UserServiceSpec extends ZIOSpecDefault with Generators {
         error <- ZIO.serviceWithZIO[UserServiceAlg](_.getAllUsers).flip
       } yield assertTrue(
         error == DatabaseTransactionError("Something went wrong whilst getting all the users")
-        ))
+      ))
         .provide(
-          mockRepo(
-            ZIO.succeed(1L),
-            ZIO.dieMessage("Something went wrong whilst getting all the users")
+          mockUserRepo(
+            insertResponse = ZIO.succeed(1L),
+            getUsersResponse = ZIO.dieMessage("Something went wrong whilst getting all the users"),
+            deleteUserResponse = ZIO.succeed(0L)
+          ),
+          ZConnectionPool.h2test,
+          database.service.UserService.live
+        )
+    }
+  )
+
+  private val deleteUserByUsernameTest = suite("deleteUserByUsername")(
+    test("calls UserRepository to delete a user by username - returns valid response") {
+      (for {
+        _ <- ZIO.serviceWithZIO[UserServiceAlg](_.deleteUserByUsername("username"))
+      } yield assertCompletes)
+        .provide(
+          mockUserRepo(
+            insertResponse = ZIO.succeed(0L),
+            getUsersResponse = ZIO.succeed(Chunk.empty),
+            deleteUserResponse = ZIO.succeed(1L)
+          ),
+          ZConnectionPool.h2test,
+          database.service.UserService.live
+        )
+    },
+    test("calls UserRepository to delete a user by username - returns failure response") {
+      (for {
+        error <- ZIO.serviceWithZIO[UserServiceAlg](_.deleteUserByUsername("username")).flip
+      } yield assertTrue(
+        error == DatabaseTransactionError("Something went wrong whilst deleting user")
+      ))
+        .provide(
+          mockUserRepo(
+            insertResponse = ZIO.succeed(1L),
+            getUsersResponse = ZIO.succeed(Chunk.empty),
+            deleteUserResponse = ZIO.dieMessage("Something went wrong whilst deleting user"),
           ),
           ZConnectionPool.h2test,
           database.service.UserService.live
