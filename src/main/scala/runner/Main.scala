@@ -16,8 +16,7 @@ import zio.http.endpoint.openapi.*
 import zio.jdbc.{ZConnectionPool, ZConnectionPoolConfig}
 
 object Main extends ZIOAppDefault {
-
-
+  
   private val logLevel: Status => LogLevel = (incomingStatus: Status) =>
     if (incomingStatus.isSuccess) LogLevel.Info
     else LogLevel.Error

@@ -9,10 +9,7 @@ final case class AllUsersResponse(users: Chunk[User])
 
 object AllUsersResponse {
   given schemaDepStatus: Schema[AllUsersResponse] = DeriveSchema.gen // used for httpContentCodec
-
-  /**
-   * json encoding/decoding
-   */
+  
   given allUsersResponseEncoder: JsonEncoder[AllUsersResponse] = DeriveJsonEncoder.gen[AllUsersResponse]
 
   given allUsersResponseDecoder: JsonDecoder[AllUsersResponse] = DeriveJsonDecoder.gen[AllUsersResponse]
