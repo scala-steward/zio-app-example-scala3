@@ -6,10 +6,6 @@ import zio.schema.*
 
 sealed abstract class ServiceError(message: String) extends Exception(message)
 
-object ServiceError {
-  given serviceErrorSchema: Schema[ServiceError] = DeriveSchema.gen
-}
-
 final case class ToDomainError(message: String) extends ServiceError(message)
 
 object ToDomainError {
@@ -19,7 +15,7 @@ object ToDomainError {
 final case class DatabaseTransactionError(message: String) extends ServiceError(message)
 
 object DatabaseTransactionError {
-  given toDomainErrorSchema: Schema[DatabaseTransactionError] = DeriveSchema.gen
+  given databaseTransactionErrorSchema: Schema[DatabaseTransactionError] = DeriveSchema.gen
 }
 
 
