@@ -32,10 +32,17 @@ object Main extends ZIOAppDefault {
           logResponseBody = true,
           level = logLevel
         )
+        logAnnotationMiddleware = Middleware.logAnnotate(request =>
+          Set(
+            zio.LogAnnotation("request_method", request.method.name),
+            zio.LogAnnotation("request_path", request.path.toString)
+          )
+        )
+        composedMiddleware = logAnnotationMiddleware ++ loggingMiddleware //todo: add new middleware here
         composedEndpoints = healthEndpoints ++ userEndpoints // todo: add new endpoints here
         openAPI = OpenAPIGen.fromEndpoints(title = "ZIO application example", version = "1.0", composedEndpoints)
         swaggerRoute = SwaggerUI.routes("docs" / "openapi", openAPI)
-        composedRoutesWithLogging = (healthRoutes ++ userRoutes ++ swaggerRoute) @@ loggingMiddleware //todo: add new routes here
+        composedRoutesWithLogging = (healthRoutes ++ userRoutes ++ swaggerRoute) @@ composedMiddleware //todo: add new routes here
         _ <- Server.serve(composedRoutesWithLogging)
       } yield ()).provide(
         Scope.default,

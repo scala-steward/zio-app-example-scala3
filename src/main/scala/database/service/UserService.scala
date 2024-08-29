@@ -36,8 +36,8 @@ final case class UserService(
       userTableChunk <- userRepository.getAllUsers
       // maybe bring in cats traverse/sequence
       userChunk <- ZIO.foreach(
-        userTableChunk.map(chunk =>
-          UserTableRow.toDomain(chunk).mapError(t => ToDomainError(t.getMessage))
+        userTableChunk.map(userTableRow =>
+          UserTableRow.toDomain(userTableRow).mapError(t => ToDomainError(t.getMessage))
         ))(identity)
     } yield userChunk
   ).mapErrorCause { cause =>
