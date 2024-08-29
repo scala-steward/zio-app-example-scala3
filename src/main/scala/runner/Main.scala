@@ -34,8 +34,8 @@ object Main extends ZIOAppDefault {
         )
         logAnnotationMiddleware = Middleware.logAnnotate(request =>
           Set(
-            zio.LogAnnotation("request_method", request.method.name),
-            zio.LogAnnotation("request_path", request.path.toString)
+            zio.LogAnnotation("method", request.method.name),
+            zio.LogAnnotation("url", request.url.encode)
           )
         )
         composedMiddleware = logAnnotationMiddleware ++ loggingMiddleware //todo: add new middleware here

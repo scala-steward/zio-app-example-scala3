@@ -24,7 +24,7 @@ final case class UserRepository() extends UserRepositoryAlg {
     sql"select * from user_table".query[UserTableRow].selectAll.orDie
 
   override def deleteUserByUsername(userName: String): URIO[ZConnection, Long] =
-    sql"delete from user_table where user_name=$userName"
+    ZIO.logInfo(s"Deleting user by $userName") *> sql"delete from user_table where user_name=$userName"
       .delete
       .orDie
 }
