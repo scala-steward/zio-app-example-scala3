@@ -14,14 +14,16 @@ trait Generators {
     userName <- nonEmptyAlphaNumString
     firstName <- nonEmptyAlphaNumString
     lastName <- nonEmptyAlphaNumString
-  } yield User(userName, firstName, lastName)
+    address <- Gen.option(nonEmptyAlphaNumString)
+  } yield User(userName, firstName, lastName, address)
 
   val userTableGen: Gen[Any, UserTableRow] = for {
     id <- Gen.int
     userName <- nonEmptyAlphaNumString
     firstName <- nonEmptyAlphaNumString
     lastName <- nonEmptyAlphaNumString
-  } yield UserTableRow(id, userName, firstName, lastName)
+    address <- Gen.option(nonEmptyAlphaNumString)
+  } yield UserTableRow(id, userName, firstName, lastName, address)
 
   val chunkUserTableGen: Gen[Any, Chunk[UserTableRow]] = for {
     chunk <- Gen.chunkOfBounded(1, 45)(userTableGen)
@@ -31,6 +33,7 @@ trait Generators {
     userName <- nonEmptyAlphaNumString
     firstName <- nonEmptyAlphaNumString
     lastName <- nonEmptyAlphaNumString
-  } yield CreateUserPayload(userName, firstName, lastName)
+    address <- Gen.option(nonEmptyAlphaNumString)
+  } yield CreateUserPayload(userName, firstName, lastName, address)
 
 }

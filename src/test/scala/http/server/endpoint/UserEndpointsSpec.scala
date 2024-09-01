@@ -103,7 +103,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
         )
         response <- routes.runZIO(request)
         body <- response.body.asString
-        expected = AllUsersResponse(Chunk.succeed(User("username", "firstname", "lastname")))
+        expected = AllUsersResponse(Chunk.succeed(User("username", "firstname", "lastname", None)))
       } yield assertTrue(
         response.status == Status.Ok,
         body == expected.toJson
@@ -111,7 +111,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
     }.provide(
       userProgramMock(
         insertUserResponse = ZIO.unit,
-        getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname"))),
+        getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname", None))),
         deleteUserByUsernameResponse = ZIO.unit
       ),
       UserEndpoints.live,
@@ -161,7 +161,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
     }.provide(
       userProgramMock(
         insertUserResponse = ZIO.unit,
-        getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname"))),
+        getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname", None))),
         deleteUserByUsernameResponse = ZIO.unit
       ),
       UserEndpoints.live,

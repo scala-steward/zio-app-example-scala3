@@ -9,7 +9,8 @@ import zio.schema.{DeriveSchema, Schema}
 final case class CreateUserPayload(
                                     userName: String,
                                     firstName: String,
-                                    lastName: String
+                                    lastName: String,
+                                    address: Option[String]
                                   )
 
 object CreateUserPayload {

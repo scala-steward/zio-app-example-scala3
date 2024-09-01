@@ -34,9 +34,9 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
           (insertUser, selectAll) <- ZIO.serviceWith[UserRepositoryAlg](service => (service.insertUser, service.getAllUsers))
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
-          user1 = User("LimbMissing1", "David", "Pratt")
-          user2 = User("LimbMissing2", "David", "Pratt")
-          user3 = User("LimbMissing3", "David", "Pratt")
+          user1 = User("LimbMissing1", "David", "Pratt", None)
+          user2 = User("LimbMissing2", "David", "Pratt", None)
+          user3 = User("LimbMissing3", "David", "Pratt", Some("Address String"))
           underTest: Chunk[UserTableRow] <- transaction(
             insertUser(user1) *> insertUser(user2) *> insertUser(user3) *> selectAll
           )
@@ -54,13 +54,13 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
   )
 
   private val insertUserTest = suite("insertUser")(
-    test("can successfully insert into a user") {
+    test("can successfully insert a user with address") {
       TestContainerResource.postgresResource.flatMap { postgresContainer =>
         (for {
           insertUser <- ZIO.serviceWith[UserRepositoryAlg](_.insertUser)
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
-          user = User("LimbMissing", "David", "Pratt")
+          user = User("LimbMissing", "David", "Pratt", Some("Address String"))
           selectSqlFrag = sql"select * from user_table".query[UserTableRow]
           underTest <- transaction(
             insertUser(user) *> selectSqlFrag.selectAll
@@ -71,7 +71,36 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
             case Chunk(userTableRow) =>
               userTableRow.userName == user.userName &&
                 userTableRow.firstName == user.firstName &&
-                userTableRow.lastName == user.lastName
+                userTableRow.lastName == user.lastName &&
+                userTableRow.maybeAddress == user.maybeAddress
+          }
+        )).provide(
+          connectionPoolConfigLayer(postgresContainer),
+          ZLayer.succeed(ZConnectionPoolConfig.default),
+          Scope.default,
+          UserRepository.live
+        )
+      }
+    },
+    test("can successfully insert into a user") {
+      TestContainerResource.postgresResource.flatMap { postgresContainer =>
+        (for {
+          insertUser <- ZIO.serviceWith[UserRepositoryAlg](_.insertUser)
+          flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
+          validationResult <- ZIO.attempt(flyway.validateWithResult())
+          user = User("LimbMissing", "David", "Pratt", None)
+          selectSqlFrag = sql"select * from user_table".query[UserTableRow]
+          underTest <- transaction(
+            insertUser(user) *> selectSqlFrag.selectAll
+          )
+        } yield assertTrue(
+          validationResult.validationSuccessful,
+          underTest match {
+            case Chunk(userTableRow) =>
+              userTableRow.userName == user.userName &&
+                userTableRow.firstName == user.firstName &&
+                userTableRow.lastName == user.lastName &&
+                userTableRow.maybeAddress == None
           }
         )).provide(
           connectionPoolConfigLayer(postgresContainer),
@@ -87,7 +116,7 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
           insertUser <- ZIO.serviceWith[UserRepositoryAlg](_.insertUser)
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
-          user = User("LimbMissing", "David", "Pratt")
+          user = User("LimbMissing", "David", "Pratt", None)
           error <- transaction(
             insertUser(user) *> insertUser(user)
           ).sandbox.flip
@@ -112,7 +141,7 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
           userName = "LimbMissing"
-          user = User(userName, "David", "Pratt")
+          user = User(userName, "David", "Pratt", None)
           result <- transaction(
             insertUser(user) *> deleteUser(userName)
           )

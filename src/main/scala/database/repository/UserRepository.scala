@@ -15,8 +15,8 @@ trait UserRepositoryAlg {
 
 final case class UserRepository() extends UserRepositoryAlg {
   override def insertUser(user: User): URIO[ZConnection, Long] = ZIO.logInfo("Inserting into user_table") *>
-    sql"insert into user_table (user_name, first_name, last_name)"
-      .values((user.userName, user.firstName, user.lastName))
+    sql"insert into user_table (user_name, first_name, last_name, address)"
+      .values((user.userName, user.firstName, user.lastName, user.address))
       .insert
       .orDie
 

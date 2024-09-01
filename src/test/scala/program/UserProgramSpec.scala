@@ -78,8 +78,8 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
       mockUserServiceAlg(
         insertResponse = ZIO.unit,
         getUsersResponse = ZIO.succeed(Chunk(
-          User("username1", "firstname1", "lastname1"),
-          User("username2", "firstname2", "lastname2")
+          User("username1", "firstname1", "lastname1", None),
+          User("username2", "firstname2", "lastname2", None)
         )),
         deleteUserByUsernameResponse = ZIO.unit
       ),

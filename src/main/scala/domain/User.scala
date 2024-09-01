@@ -2,13 +2,13 @@ package domain
 
 import zio.*
 import zio.json.*
-import zio.schema.*
 
 
 final case class User(
                        userName: String,
                        firstName: String,
-                       lastName: String
+                       lastName: String,
+                       address: Option[String]
                      )
 
 object User {

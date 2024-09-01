@@ -34,7 +34,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
         (for {
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
-          user = User("limbmissing", "David", "Pratt")
+          user = User("limbmissing", "David", "Pratt", None)
           res <- ZIO.serviceWithZIO[UserServiceAlg](_.insertUser(user))
         } yield assertTrue(
           validationResult.validationSuccessful,
@@ -53,7 +53,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
         (for {
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
-          user = User("limbmissing", "David", "Pratt")
+          user = User("limbmissing", "David", "Pratt", None)
           underTest <- ZIO.service[UserServiceAlg]
           _ <- underTest.insertUser(user)
           error <- underTest.insertUser(user).flip
@@ -77,9 +77,9 @@ object UserServiceITSpec extends ZIOSpecDefault {
         (for {
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
-          user1 = User("limbmissing1", "David", "Pratt")
-          user2 = User("limbmissing2", "David", "Pratt")
-          user3 = User("limbmissing3", "David", "Pratt")
+          user1 = User("limbmissing1", "David", "Pratt", None)
+          user2 = User("limbmissing2", "David", "Pratt", None)
+          user3 = User("limbmissing3", "David", "Pratt", None)
           (insertUser, getAllUsers) <- ZIO.serviceWith[UserServiceAlg](service => (service.insertUser, service.getAllUsers))
           _ <- insertUser(user1)
           _ <- insertUser(user2)
@@ -105,7 +105,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
         (for {
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
           validationResult <- ZIO.attempt(flyway.validateWithResult())
-          user = User("limbmissing", "David", "Pratt")
+          user = User("limbmissing", "David", "Pratt", None)
           (insertUser, deleteUserByUsername) <- ZIO.serviceWith[UserServiceAlg](service => (service.insertUser, service.deleteUserByUsername))
           _ <- insertUser(user)
           res <- deleteUserByUsername(user.userName)

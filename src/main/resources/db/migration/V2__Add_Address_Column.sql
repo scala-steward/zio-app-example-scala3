@@ -1,0 +1,2 @@
+ALTER TABLE user_table
+ADD COLUMN address TEXT NULL;
