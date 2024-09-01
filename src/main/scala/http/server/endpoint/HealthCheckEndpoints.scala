@@ -1,19 +1,18 @@
 package http.server.endpoint
 
-import domain.error.*
+
 import domain.response.*
 import program.HealthProgramAlg
 import zio.*
 import zio.http.*
 import zio.http.codec.*
+import zio.http.endpoint.AuthType.None
 import zio.http.endpoint.Endpoint
-import zio.http.endpoint.EndpointMiddleware.None
 import zio.jdbc.ZConnectionPool
 
 
 trait HealthCheckEndpointsAlg {
-  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & Map[String, String] <: Equals, None]]
-
+  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & Map[String, String] <: Equals, None]] 
   def routes: Routes[ZConnectionPool, Response]
 }
 

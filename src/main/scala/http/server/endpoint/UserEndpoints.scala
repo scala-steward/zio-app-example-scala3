@@ -8,9 +8,8 @@ import program.*
 import zio.*
 import zio.http.*
 import zio.http.codec.*
-import zio.http.codec.HttpCodec.Metadata
+import zio.http.endpoint.AuthType.None
 import zio.http.endpoint.Endpoint
-import zio.http.endpoint.EndpointMiddleware.None
 import zio.jdbc.ZConnectionPool
 
 trait UserEndpointsAlg {
@@ -70,13 +69,9 @@ final case class UserEndpoints(
   private val deleteUserEndpoint =
     Endpoint(Method.DELETE / Root / "user")
       .query(
-        HttpCodec.query("userName")
+        HttpCodec.query[String]("userName")
       )
       .out[SuccessfulResponse](Status.Ok)
-  //      .outErrors[ServiceError](
-  //        HttpCodec.error[ToDomainError](Status.UnprocessableEntity), // This error does not occur but the line has to be added for the code to compile
-  //        HttpCodec.error[DatabaseTransactionError](Status.InternalServerError)
-  //      )
 
 
   private val deleteUserRoute = deleteUserEndpoint.implement { userName =>
