@@ -66,6 +66,25 @@ final case class UserEndpoints(
    * #3 - deletes users by username
    */
 
+  /**
+   *
+   * Default schemas/standardTypes can be found here: zio.schema.StandardType.scala:
+   *
+   * Example for Int type:
+   *
+   * implicit object IntType extends StandardType[Int] {
+   *  override def tag: String                       = Tags.INT
+   *  override def compare(x: Int, y: Int): Int      = x.compareTo(y)
+   *  override val defaultValue: Either[String, Int] = Right(0)
+   * }
+   *
+   * and then inside Schema.scala:
+   *
+   * implicit def primitive[A](implicit standardType: StandardType[A]): Schema[A] =
+   *  Primitive(standardType, Chunk.empty)
+   *
+   */
+
   private val deleteUserEndpoint =
     Endpoint(Method.DELETE / Root / "user")
       .query(
