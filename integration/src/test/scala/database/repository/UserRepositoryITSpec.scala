@@ -72,7 +72,7 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
               userTableRow.userName == user.userName &&
                 userTableRow.firstName == user.firstName &&
                 userTableRow.lastName == user.lastName &&
-                userTableRow.maybeAddress == user.maybeAddress
+                userTableRow.maybeAddress == user.address
           }
         )).provide(
           connectionPoolConfigLayer(postgresContainer),

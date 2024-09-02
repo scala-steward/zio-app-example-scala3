@@ -5,6 +5,8 @@ import domain.User
 import domain.payload.CreateUserPayload
 import zio.Chunk
 import zio.test.Gen
+import io.github.iltotore.iron.*
+import io.github.iltotore.iron.constraint.all.Empty
 
 trait Generators {
 
@@ -29,8 +31,9 @@ trait Generators {
     chunk <- Gen.chunkOfBounded(1, 45)(userTableGen)
   } yield chunk
 
-  val createUserPayload: Gen[Any, CreateUserPayload] = for {
-    userName <- nonEmptyAlphaNumString
+
+  val nonEmptyCreateUserPayload: Gen[Any, CreateUserPayload] = for {
+    userName <- nonEmptyAlphaNumString.map(_.refineUnsafe[Not[Empty]])
     firstName <- nonEmptyAlphaNumString
     lastName <- nonEmptyAlphaNumString
     address <- Gen.option(nonEmptyAlphaNumString)

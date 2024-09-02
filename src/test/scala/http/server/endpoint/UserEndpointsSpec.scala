@@ -39,8 +39,41 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
     )
 
   private val insertUserEndpointTests = suite("post /user")(
+    test("returns 400 (Bad Request) when a user is inserted with an empty field [Username]") {
+      for {
+        routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
+        bodyString =
+          """
+            |{
+            | "userName":"",
+            | "firstName":"firstName",
+            | "lastName":"lastName"
+            |}
+            |""".stripMargin
+        url <- ZIO.fromEither(URL.decode("/user"))
+        request = Request(
+          method = Method.POST,
+          url = url,
+          body = Body.fromString(bodyString)
+        )
+        response <- routes.runZIO(request)
+        body <- response.body.asString
+        expectedString = """{"name":"MalformedBody","message":"Malformed request body failed to decode: .userName(String should not be empty)"}"""
+      } yield assertTrue(
+        response.status == Status.BadRequest,
+        body == expectedString
+      )
+    }.provide(
+      userProgramMock(
+        insertUserResponse = ZIO.unit,
+        getAllUsersResponse = ZIO.succeed(Chunk.empty),
+        deleteUserByUsernameResponse = ZIO.unit
+      ),
+      UserEndpoints.live,
+      ZConnectionPool.h2test
+    ),
     test("returns 201 when provided the proper payload and is successfully inserted") {
-      checkN(1)(createUserPayload) { createUserPayload =>
+      checkN(1)(nonEmptyCreateUserPayload) { createUserPayload =>
         for {
           routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
           url <- ZIO.fromEither(URL.decode("/user"))
@@ -67,7 +100,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
       ZConnectionPool.h2test
     ),
     test("returns 500 when the program fibre fails") {
-      checkN(10)(createUserPayload) { createUserPayload =>
+      checkN(10)(nonEmptyCreateUserPayload) { createUserPayload =>
         for {
           routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
           url <- ZIO.fromEither(URL.decode("/user"))
