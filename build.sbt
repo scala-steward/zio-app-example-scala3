@@ -12,14 +12,14 @@ lazy val testContainerScalaVersion = "0.41.4"
 lazy val zioJdbcVersion = "0.1.2"
 lazy val zioConfigVersion = "4.0.2"
 lazy val postgresDriverVersion = "42.7.3"
-lazy val flywayVersion = "10.17.1"
+lazy val flywayVersion = "10.17.3"
 lazy val h2Version = "2.3.232"
 lazy val chimneyVersion = "1.4.0"
 lazy val ironVersion = "2.6.0-RC1"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "zio-app-example1-scala3",
+    name := "zio-app-example-scala3",
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % zioVersion,
       "dev.zio" %% "zio-http" % zioHttpVersion,
