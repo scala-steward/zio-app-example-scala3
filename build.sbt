@@ -16,6 +16,7 @@ lazy val flywayVersion = "10.17.3"
 lazy val h2Version = "2.3.232"
 lazy val chimneyVersion = "1.4.0"
 lazy val ironVersion = "2.6.0"
+lazy val izumiReflectVersion = "2.3.10"
 
 lazy val root = (project in file("."))
   .settings(
@@ -32,7 +33,8 @@ lazy val root = (project in file("."))
       "org.postgresql" % "postgresql" % postgresDriverVersion,
       "org.flywaydb" % "flyway-database-postgresql" % flywayVersion,
       "io.scalaland" %% "chimney" % chimneyVersion,
-      "io.github.iltotore" %% "iron" % ironVersion
+      "io.github.iltotore" %% "iron" % ironVersion,
+      "dev.zio" %% "izumi-reflect" % izumiReflectVersion
     ) ++ testDependencies,
     scalacOptions ++= Seq("-Yretain-trees"),
     resolvers ++= Resolver.sonatypeOssRepos("snapshots"),
