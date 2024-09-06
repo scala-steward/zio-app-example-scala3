@@ -2,11 +2,11 @@ package database.schema
 
 import domain.User
 import io.scalaland.chimney.dsl.*
+import izumi.reflect.Tag as IzumiTag
 import zio.*
 import zio.jdbc.*
 import zio.schema.Schema.{Field, primitive}
 import zio.schema.{Schema, StandardType, TypeId}
-import izumi.reflect.{Tag => IzumiTag}
 
 final case class UserTableRow(id: Int, userName: String, firstName: String, lastName: String, maybeAddress: Option[String])
 
