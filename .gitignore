@@ -6,3 +6,5 @@
 /integration/target/
 .vscode
 /.metals/
+/src/main/scala/runner/.bsp/
+/src/main/scala/runner/.scala-build/

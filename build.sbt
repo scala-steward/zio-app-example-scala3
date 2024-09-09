@@ -7,7 +7,6 @@ lazy val zioVersion = "2.1.9"
 lazy val zioHttpVersion = "3.0.0-RC10"
 lazy val zioJsonVersion = "0.7.3"
 lazy val zioMockVersion = "1.0.0-RC12"
-lazy val zioPreludeVersion = "1.0.0-RC26"
 lazy val testContainerScalaVersion = "0.41.4"
 lazy val zioJdbcVersion = "0.1.2"
 lazy val zioConfigVersion = "4.0.2"
@@ -29,7 +28,6 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-config" % zioConfigVersion,
       "dev.zio" %% "zio-config-magnolia" % zioConfigVersion,
       "dev.zio" %% "zio-config-typesafe" % zioConfigVersion,
-      "dev.zio" %% "zio-prelude" % zioPreludeVersion,
       "org.postgresql" % "postgresql" % postgresDriverVersion,
       "org.flywaydb" % "flyway-database-postgresql" % flywayVersion,
       "io.scalaland" %% "chimney" % chimneyVersion,
