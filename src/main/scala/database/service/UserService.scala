@@ -34,8 +34,7 @@ final case class UserService(
   override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = transaction(
     for {
       userTableChunk <- userRepository.getAllUsers
-      // maybe bring in cats traverse/sequence
-      userChunk <- ZIO.foreach(
+      userChunk <- ZIO.foreachPar(
         userTableChunk.map(userTableRow =>
           UserTableRow.toDomain(userTableRow).mapError(t => ToDomainError(t.getMessage))
         ))(identity)
