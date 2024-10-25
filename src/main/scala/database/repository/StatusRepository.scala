@@ -1,6 +1,5 @@
 package database.repository
 
-import domain.User
 import zio.*
 import zio.jdbc.{ZConnection, sqlInterpolator}
 
