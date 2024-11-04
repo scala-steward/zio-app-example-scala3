@@ -10,7 +10,7 @@ trait StatusRepositoryAlg {
 final case class StatusRepository() extends StatusRepositoryAlg {
   override def select1(): URIO[ZConnection, Option[Int]] =
     ZIO.logInfo(s"Selecting 1 from database") *>
-      sql"select 1"
+      sql"SELECT 1"
         .query[Int]
         .selectOne
         .orDie

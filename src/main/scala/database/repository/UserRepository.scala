@@ -15,16 +15,17 @@ trait UserRepositoryAlg {
 
 final case class UserRepository() extends UserRepositoryAlg {
   override def insertUser(user: User): URIO[ZConnection, Long] = ZIO.logInfo("Inserting into user_table") *>
-    sql"insert into user_table (user_name, first_name, last_name, address)"
+    sql"INSERT INTO user_table (user_name, first_name, last_name, address)"
       .values((user.userName, user.firstName, user.lastName, user.address))
       .insert
       .orDie
 
+
   override def getAllUsers: URIO[ZConnection, Chunk[UserTableRow]] = ZIO.logInfo("Retrieving all users from the user_table") *>
-    sql"select * from user_table".query[UserTableRow].selectAll.orDie
+    sql"SELECT id, user_name, first_name, last_name, address FROM user_table".query[UserTableRow].selectAll.orDie
 
   override def deleteUserByUsername(userName: String): URIO[ZConnection, Long] =
-    ZIO.logInfo(s"Deleting user by $userName") *> sql"delete from user_table where user_name=$userName"
+    ZIO.logInfo(s"Deleting user by $userName") *> sql"DELETE FROM user_table WHERE user_name=$userName"
       .delete
       .orDie
 }
