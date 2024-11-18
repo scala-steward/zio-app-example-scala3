@@ -13,8 +13,7 @@ import zio.http.endpoint.Endpoint
 import zio.jdbc.ZConnectionPool
 
 trait UserEndpointsAlg {
-  def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]]
-
+  def endpoints: Seq[Endpoint[? >: Unit & String, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]]
   def routes: Routes[ZConnectionPool, Nothing]
 }
 
@@ -86,10 +85,7 @@ final case class UserEndpoints(
    */
 
   private val deleteUserEndpoint =
-    Endpoint(Method.DELETE / Root / "user")
-      .query(
-        HttpCodec.query[String]("userName")
-      )
+    Endpoint(Method.DELETE / Root / "user" / string("userName"))
       .out[SuccessfulResponse](Status.Ok)
 
 
@@ -102,7 +98,7 @@ final case class UserEndpoints(
   /**
    * Returns the public endpoints and routes
    */
-  override def endpoints: List[Endpoint[Unit, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]] = List(
+  override def endpoints: Seq[Endpoint[? >: Unit & String, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]] = List(
     insertUserEndpoint,
     getAllUsersEndpoint,
     deleteUserEndpoint

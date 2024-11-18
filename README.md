@@ -22,6 +22,15 @@ sbt "runMain runner.Main"
 ## To reach the open api/swagger documentation, use this url: 
 `http://localhost:8080/docs/openapi`
 
+## To run the test:
+```bash
+sbt test
+```
+
+```bash
+sbt 'integration / test'
+```
+
 ---
 ## Useful links
 * [Scala steward config settings](https://github.com/scala-steward-org/scala-steward/blob/main/docs/repo-specific-configuration.md)

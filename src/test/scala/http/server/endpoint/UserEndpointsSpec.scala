@@ -173,13 +173,11 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
     )
   )
 
-  private val deleteUserEndpointTests = suite("delete /users")(
+  private val deleteUserEndpointTests = suite("delete /users/{username}")(
     test("returns 200 when a request is made to delete users and no error occurs") {
       for {
         routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
-        urlDecode <- ZIO.fromEither(URL.decode("/user"))
-        queryParams = QueryParams.apply(("userName", "LimbMissing"))
-        url = urlDecode.copy(queryParams = queryParams)
+        url <- ZIO.fromEither(URL.decode("/user/LimbMissing"))
         request = Request(
           method = Method.DELETE,
           url = url,
