@@ -86,7 +86,7 @@ final case class UserEndpoints(
 
   private val deleteUserEndpoint =
     Endpoint(Method.DELETE / Root / "user" / string("userName"))
-      .out[SuccessfulResponse](Status.Ok)
+      .out[SuccessfulResponse](Status.NoContent)
 
 
   private val deleteUserRoute = deleteUserEndpoint.implement { userName =>

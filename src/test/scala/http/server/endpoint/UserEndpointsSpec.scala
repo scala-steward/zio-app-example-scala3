@@ -186,7 +186,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
         body <- response.body.asString
         expected = SuccessfulResponse("User has been deleted")
       } yield assertTrue(
-        response.status == Status.Ok,
+        response.status == Status.NoContent,
         body == expected.toJson
       )
     }.provide(
