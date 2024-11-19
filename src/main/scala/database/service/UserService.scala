@@ -37,7 +37,7 @@ final case class UserService(
       userChunk <- ZIO.foreachPar(
         userTableChunk.map(userTableRow =>
           UserTableRow.toDomain(userTableRow).mapError(t => ToDomainError(t.getMessage))
-        ))(identity)
+        ))(identity) @@ ZIOAspect.parallel(10)
     } yield userChunk
   ).mapErrorCause { cause =>
     Cause.fail(DatabaseTransactionError(cause.squash.getMessage))
