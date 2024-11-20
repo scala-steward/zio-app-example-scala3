@@ -65,15 +65,57 @@ object HealthCheckEndpointsSpec extends ZIOSpecDefault {
         response.status == Status.Ok,
         body == expected.toJson
       )
-    }
-  ).provide(
-    ZConnectionPool.h2test,
-    healthProgramMock(
-      getStatusesResponse = ZIO.succeed(Map(
-        "dependency" -> "Ok"
-      ))
+    }.provide(
+      ZConnectionPool.h2test,
+      healthProgramMock(
+        getStatusesResponse = ZIO.succeed(Map(
+          "dependency" -> "Ok"
+        ))
+      ),
+      HealthCheckEndpoints.layer,
     ),
-    HealthCheckEndpoints.layer,
+    test("returns InternalServerError when the healthProgram fails") {
+      for {
+        routes <- ZIO.serviceWith[HealthCheckEndpointsAlg](_.routes)
+        url <- ZIO.fromEither(URL.decode("/status/dependencies"))
+        validStatusRequest = Request(
+          method = Method.GET,
+          url = url
+        )
+        response <- routes.runZIO(validStatusRequest)
+        body = response.body
+      } yield assertTrue(
+        response.status == Status.InternalServerError,
+        body == Body.empty
+      )
+    }.provide(
+      ZConnectionPool.h2test,
+      healthProgramMock(
+        getStatusesResponse = ZIO.fail(Exception("Something went wrong"))
+      ),
+      HealthCheckEndpoints.layer,
+    ),
+    test("returns InternalServerError when the healthProgram dies") {
+      for {
+        routes <- ZIO.serviceWith[HealthCheckEndpointsAlg](_.routes)
+        url <- ZIO.fromEither(URL.decode("/status/dependencies"))
+        validStatusRequest = Request(
+          method = Method.GET,
+          url = url
+        )
+        response <- routes.runZIO(validStatusRequest)
+        body = response.body
+      } yield assertTrue(
+        response.status == Status.InternalServerError,
+        body == Body.empty
+      )
+    }.provide(
+      ZConnectionPool.h2test,
+      healthProgramMock(
+        getStatusesResponse = ZIO.die(Exception("Something went wrong"))
+      ),
+      HealthCheckEndpoints.layer,
+    )
   )
 
 }
