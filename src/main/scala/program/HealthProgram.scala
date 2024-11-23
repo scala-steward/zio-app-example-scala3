@@ -1,9 +1,7 @@
 package program
 
-import database.repository.StatusRepositoryAlg
 import database.service.StatusServiceAlg
-import domain.error.ServiceError
-import zio.jdbc.{ZConnection, ZConnectionPool}
+import zio.jdbc.ZConnectionPool
 import zio.{ZIO, ZLayer}
 
 trait HealthProgramAlg {

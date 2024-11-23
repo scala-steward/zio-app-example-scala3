@@ -11,7 +11,7 @@ import zio.schema.{Schema, StandardType, TypeId}
 final case class UserTableRow(id: Int, userName: String, firstName: String, lastName: String, maybeAddress: Option[String])
 
 object UserTableRow {
-  private def nullableGenericSchema[A: IzumiTag](implicit standardType: StandardType[A]): Schema[Option[A]] = primitive[A].transformOrFail(
+  private def nullableToOptionSchema[A: IzumiTag](implicit standardType: StandardType[A]): Schema[Option[A]] = primitive[A].transformOrFail(
     {
       case null => Right(None)
       case default => Right(Some(default))
@@ -29,7 +29,7 @@ object UserTableRow {
       Field[UserTableRow, String]("user_name", Schema.primitive[String], get0 = _.userName, set0 = (u, v) => u.copy(userName = v)),
       Field[UserTableRow, String]("first_name", Schema.primitive[String], get0 = _.firstName, set0 = (u, v) => u.copy(firstName = v)),
       Field[UserTableRow, String]("last_name", Schema.primitive[String], get0 = _.lastName, set0 = (u, v) => u.copy(lastName = v)),
-      Field[UserTableRow, Option[String]]("address", nullableGenericSchema[String], get0 = _.maybeAddress, set0 = (u, v) => u.copy(maybeAddress = v)),
+      Field[UserTableRow, Option[String]]("address", nullableToOptionSchema[String], get0 = _.maybeAddress, set0 = (u, v) => u.copy(maybeAddress = v)),
       (id, userName, firstName, lastName, maybeAddress) => UserTableRow(id, userName, firstName, lastName, maybeAddress)
     )
 

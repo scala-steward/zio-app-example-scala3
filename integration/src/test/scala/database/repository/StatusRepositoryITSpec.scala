@@ -1,7 +1,6 @@
 package database.repository
 
 import _root_.util.*
-import database.repository.{StatusRepository, StatusRepositoryAlg}
 import database.util.ZConnectionPoolWrapper
 import domain.PortDetails
 import org.flywaydb.core.api.output.ValidateResult
@@ -20,7 +19,7 @@ object StatusRepositoryITSpec extends ZIOSpecDefault {
     postgresContainer.getPassword
   )
 
-  override def spec =
+  override def spec: Spec[TestEnvironment & Scope, Throwable] =
     suite("StatusRepository")(
       test("can successfully query the db to check if it is live") {
         TestContainerResource.postgresResource.flatMap { postgresContainer =>

@@ -11,12 +11,12 @@ import zio.test.*
 object UserProgramSpec extends ZIOSpecDefault with Generators {
 
   private def mockUserServiceAlg(
-                                  insertResponse: ZIO[ZConnectionPool, ServiceError, Unit],
+                                  insertResponse: ZIO[ZConnectionPool, ServiceError, Long],
                                   getUsersResponse: ZIO[ZConnectionPool, ServiceError, Chunk[User]],
                                   deleteUserByUsernameResponse: ZIO[ZConnectionPool, ServiceError, Unit]
                                 ) = ZLayer.succeed(
     new UserServiceAlg {
-      override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] = insertResponse
+      override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Long] = insertResponse
 
       override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = getUsersResponse
 
@@ -32,15 +32,17 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
     )
 
   private val insertUserTests = suite("insertUser")(
-    test("returns unit when the insertion is successful") {
+    test("returns a long when the insertion is successful") {
       checkN(10)(userGen) { user =>
         for {
-          _ <- ZIO.serviceWithZIO[UserProgramAlg](_.insertUser(user))
-        } yield assertCompletes
+          res <- ZIO.serviceWithZIO[UserProgramAlg](_.insertUser(user))
+        } yield assertTrue(
+          res == 10L
+        )
       }
     }.provide(
       mockUserServiceAlg(
-        insertResponse = ZIO.unit,
+        insertResponse = ZIO.succeed(10L),
         getUsersResponse = ZIO.succeed(Chunk.empty),
         deleteUserByUsernameResponse = ZIO.unit
       ),
@@ -76,7 +78,7 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
       )
     }.provide(
       mockUserServiceAlg(
-        insertResponse = ZIO.unit,
+        insertResponse = ZIO.succeed(1L),
         getUsersResponse = ZIO.succeed(Chunk(
           User("username1", "firstname1", "lastname1", None),
           User("username2", "firstname2", "lastname2", None)
@@ -90,14 +92,12 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
 
   private val deleteUserByUsernameTests = suite("deleteUserByUsername")(
     test("returns unit when the deletion is successful") {
-      checkN(10)(userGen) { user =>
-        for {
-          _ <- ZIO.serviceWithZIO[UserProgramAlg](_.deleteUserByUsername("username"))
-        } yield assertCompletes
-      }
+      for {
+        _ <- ZIO.serviceWithZIO[UserProgramAlg](_.deleteUserByUsername("username"))
+      } yield assertCompletes
     }.provide(
       mockUserServiceAlg(
-        insertResponse = ZIO.unit,
+        insertResponse = ZIO.succeed(1L),
         getUsersResponse = ZIO.succeed(Chunk.empty),
         deleteUserByUsernameResponse = ZIO.unit
       ),
@@ -112,7 +112,7 @@ object UserProgramSpec extends ZIOSpecDefault with Generators {
       )
     }.provide(
       mockUserServiceAlg(
-        insertResponse = ZIO.unit,
+        insertResponse = ZIO.succeed(1L),
         getUsersResponse = ZIO.succeed(Chunk.empty),
         deleteUserByUsernameResponse = ZIO.fail(DatabaseTransactionError("issue with transaction"))
       ),

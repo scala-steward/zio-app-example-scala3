@@ -3,7 +3,7 @@ package database.service
 import database.repository.StatusRepositoryITSpec.{suite, test}
 import database.repository.UserRepository
 import database.util.ZConnectionPoolWrapper
-import domain.error.UsernameDuplicateError
+import domain.error.{UserAlreadyDeletedError, UserNotFoundError, UsernameDuplicateError}
 import domain.{PortDetails, User}
 import org.testcontainers.containers
 import util.{FlywayResource, TestContainerResource}
@@ -12,8 +12,7 @@ import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.{Scope, ZIO, ZLayer}
 
 object UserServiceITSpec extends ZIOSpecDefault {
-
-
+  
   private def connectionPoolConfigLayer(postgresContainer: containers.PostgreSQLContainer[?]) = ZConnectionPoolWrapper.connectionPool(
     postgresContainer.getHost,
     postgresContainer.getMappedPort(PortDetails.PostgresPort.port),
@@ -22,7 +21,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
     postgresContainer.getPassword
   )
 
-  override def spec = suite("UserService")(
+  override def spec: Spec[TestEnvironment & Scope, Any] = suite("UserService")(
     insertUserTests,
     getAllUsersTest,
     deleteUserByUsernameTest
@@ -38,7 +37,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
           res <- ZIO.serviceWithZIO[UserServiceAlg](_.insertUser(user))
         } yield assertTrue(
           validationResult.validationSuccessful,
-          res == ()
+          res == 1L
         )).provide(
           connectionPoolConfigLayer(postgresContainer),
           ZLayer.succeed(ZConnectionPoolConfig.default),
@@ -72,7 +71,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
   )
 
   private val getAllUsersTest = suite("getAllUsers")(
-    test("can successfully retrieve inserted users") {
+    test("can successfully retrieve inserted users if they are not deleted") {
       TestContainerResource.postgresResource.flatMap { postgresContainer =>
         (for {
           flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
@@ -88,6 +87,35 @@ object UserServiceITSpec extends ZIOSpecDefault {
         } yield assertTrue(
           validationResult.validationSuccessful,
           res.length == 3
+        )).provide(
+          connectionPoolConfigLayer(postgresContainer),
+          ZLayer.succeed(ZConnectionPoolConfig.default),
+          Scope.default,
+          UserRepository.layer,
+          UserService.layer
+        )
+      }
+    },
+    test("can not retrieve inserted users if they are deleted") {
+      TestContainerResource.postgresResource.flatMap { postgresContainer =>
+        (for {
+          flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
+          validationResult <- ZIO.attempt(flyway.validateWithResult())
+          userNameToDelete = "limbmissing1"
+          user1 = User(userNameToDelete, "David", "Pratt", None)
+          user2 = User("limbmissing2", "David", "Pratt", None)
+          user3 = User("limbmissing3", "David", "Pratt", None)
+          (insertUser, deleteUser, getAllUsers) <- ZIO.serviceWith[UserServiceAlg](service =>
+            (service.insertUser, service.deleteUserByUsername, service.getAllUsers)
+          )
+          _ <- insertUser(user1)
+          _ <- insertUser(user2)
+          _ <- insertUser(user3)
+          _ <- deleteUser(userNameToDelete)
+          res <- getAllUsers
+        } yield assertTrue(
+          validationResult.validationSuccessful,
+          res.length == 2
         )).provide(
           connectionPoolConfigLayer(postgresContainer),
           ZLayer.succeed(ZConnectionPoolConfig.default),
@@ -112,6 +140,47 @@ object UserServiceITSpec extends ZIOSpecDefault {
         } yield assertTrue(
           validationResult.validationSuccessful,
           res == ()
+        )).provide(
+          connectionPoolConfigLayer(postgresContainer),
+          ZLayer.succeed(ZConnectionPoolConfig.default),
+          Scope.default,
+          UserRepository.layer,
+          UserService.layer
+        )
+      }
+    },
+    test("errors when trying to delete a user that does not exist - [repo returns zero]") {
+      TestContainerResource.postgresResource.flatMap { postgresContainer =>
+        (for {
+          flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
+          validationResult <- ZIO.attempt(flyway.validateWithResult())
+          deleteUserByUsername <- ZIO.serviceWith[UserServiceAlg](_.deleteUserByUsername)
+          res <- deleteUserByUsername("notfound").flip
+        } yield assertTrue(
+          validationResult.validationSuccessful,
+          res == UserNotFoundError("Unable to delete this user as the username does not exist")
+        )).provide(
+          connectionPoolConfigLayer(postgresContainer),
+          ZLayer.succeed(ZConnectionPoolConfig.default),
+          Scope.default,
+          UserRepository.layer,
+          UserService.layer
+        )
+      }
+    },
+    test("can not delete the same user twice") {
+      TestContainerResource.postgresResource.flatMap { postgresContainer =>
+        (for {
+          flyway <- FlywayResource.flywayResource(postgresContainer.getJdbcUrl, postgresContainer.getUsername, postgresContainer.getPassword)
+          validationResult <- ZIO.attempt(flyway.validateWithResult())
+          user = User("limbmissing", "David", "Pratt", None)
+          (insertUser, deleteUserByUsername) <- ZIO.serviceWith[UserServiceAlg](service => (service.insertUser, service.deleteUserByUsername))
+          _ <- insertUser(user)
+          _ <- deleteUserByUsername(user.userName)
+          failure <- deleteUserByUsername(user.userName).flip
+        } yield assertTrue(
+          validationResult.validationSuccessful,
+          failure.isInstanceOf[UserAlreadyDeletedError]
         )).provide(
           connectionPoolConfigLayer(postgresContainer),
           ZLayer.succeed(ZConnectionPoolConfig.default),

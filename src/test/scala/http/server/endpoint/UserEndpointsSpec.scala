@@ -17,13 +17,13 @@ import zio.test.*
 object UserEndpointsSpec extends ZIOSpecDefault with Generators {
 
   private def userProgramMock(
-                               insertUserResponse: ZIO[Any, ServiceError, Unit],
+                               insertUserResponse: ZIO[Any, ServiceError, Long],
                                getAllUsersResponse: ZIO[Any, ServiceError, Chunk[User]],
                                deleteUserByUsernameResponse: ZIO[Any, ServiceError, Unit],
                              ): ULayer[UserProgramAlg] =
     ZLayer.succeed(
       new UserProgramAlg {
-        override def insertUser(user: User): ZIO[Any, ServiceError, Unit] = insertUserResponse
+        override def insertUser(user: User): ZIO[Any, ServiceError, Long] = insertUserResponse
 
         override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = getAllUsersResponse
 
@@ -65,7 +65,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
       )
     }.provide(
       userProgramMock(
-        insertUserResponse = ZIO.unit,
+        insertUserResponse = ZIO.succeed(1L),
         getAllUsersResponse = ZIO.succeed(Chunk.empty),
         deleteUserByUsernameResponse = ZIO.unit
       ),
@@ -84,7 +84,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
           )
           response <- routes.runZIO(request)
           body <- response.body.asString
-          expected = SuccessfulResponse("success")
+          expected = SuccessfulResponse(1L)
         } yield assertTrue(
           response.status == Status.Created,
           body == expected.toJson
@@ -92,7 +92,31 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
       }
     }.provide(
       userProgramMock(
-        insertUserResponse = ZIO.unit,
+        insertUserResponse = ZIO.succeed(1L),
+        getAllUsersResponse = ZIO.succeed(Chunk.empty),
+        deleteUserByUsernameResponse = ZIO.unit
+      ),
+      UserEndpoints.layer,
+      ZConnectionPool.h2test
+    ),
+    test("returns a 500 when the insertion fails") {
+      checkN(1)(nonEmptyCreateUserPayload) { createUserPayload =>
+        for {
+          routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
+          url <- ZIO.fromEither(URL.decode("/user"))
+          request = Request(
+            method = Method.POST,
+            url = url,
+            body = Body.fromString(createUserPayload.toJson)
+          )
+          response <- routes.runZIO(request)
+        } yield assertTrue(
+          response.status == Status.InternalServerError
+        )
+      }
+    }.provide(
+      userProgramMock(
+        insertUserResponse = ZIO.fail(UserNotInsertedError("failed to insert the user")),
         getAllUsersResponse = ZIO.succeed(Chunk.empty),
         deleteUserByUsernameResponse = ZIO.unit
       ),
@@ -122,6 +146,30 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
         deleteUserByUsernameResponse = ZIO.unit
       ),
       UserEndpoints.layer
+    ),
+    test("returns 500 when the transaction fails") {
+      checkN(10)(nonEmptyCreateUserPayload) { createUserPayload =>
+        for {
+          routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
+          url <- ZIO.fromEither(URL.decode("/user"))
+          request = Request(
+            method = Method.POST,
+            url = url,
+            body = Body.fromString(createUserPayload.toJson)
+          )
+          response <- routes.runZIO(request)
+        } yield assertTrue(
+          response.status == Status.InternalServerError
+        )
+      }
+    }.provide(
+      ZConnectionPool.h2test,
+      userProgramMock(
+        insertUserResponse = ZIO.fail(DatabaseTransactionError("some issue")),
+        getAllUsersResponse = ZIO.succeed(Chunk.empty),
+        deleteUserByUsernameResponse = ZIO.unit
+      ),
+      UserEndpoints.layer
     )
   )
 
@@ -143,7 +191,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
       )
     }.provide(
       userProgramMock(
-        insertUserResponse = ZIO.unit,
+        insertUserResponse = ZIO.succeed(1L),
         getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname", None))),
         deleteUserByUsernameResponse = ZIO.unit
       ),
@@ -165,7 +213,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
     }.provide(
       ZConnectionPool.h2test,
       userProgramMock(
-        insertUserResponse = ZIO.unit,
+        insertUserResponse = ZIO.succeed(1L),
         getAllUsersResponse = ZIO.dieMessage("Failed to retrieve all users"),
         deleteUserByUsernameResponse = ZIO.unit
       ),
@@ -174,7 +222,7 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
   )
 
   private val deleteUserEndpointTests = suite("delete /users/{username}")(
-    test("returns 200 when a request is made to delete users and no error occurs") {
+    test("returns 200 when a request is made to delete users and no errors occurs") {
       for {
         routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
         url <- ZIO.fromEither(URL.decode("/user/LimbMissing"))
@@ -184,16 +232,63 @@ object UserEndpointsSpec extends ZIOSpecDefault with Generators {
         )
         response <- routes.runZIO(request)
         body <- response.body.asString
-        expected = SuccessfulResponse("User has been deleted")
       } yield assertTrue(
         response.status == Status.NoContent,
-        body == expected.toJson
+        body == "{}"
       )
     }.provide(
       userProgramMock(
-        insertUserResponse = ZIO.unit,
+        insertUserResponse = ZIO.succeed(1L),
         getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname", None))),
         deleteUserByUsernameResponse = ZIO.unit
+      ),
+      UserEndpoints.layer,
+      ZConnectionPool.h2test
+    ),
+    test("returns 400 when a request is made to delete users and the user has already been deleted") {
+      for {
+        routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
+        url <- ZIO.fromEither(URL.decode("/user/LimbMissing"))
+        request = Request(
+          method = Method.DELETE,
+          url = url,
+        )
+        response <- routes.runZIO(request)
+        body <- response.body.asString
+        expected = "{\"message\":\"already deleted\"}"
+      } yield assertTrue(
+        response.status == Status.BadRequest,
+        body == expected
+      )
+    }.provide(
+      userProgramMock(
+        insertUserResponse = ZIO.succeed(1L),
+        getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname", None))),
+        deleteUserByUsernameResponse = ZIO.fail(UserAlreadyDeletedError("already deleted"))
+      ),
+      UserEndpoints.layer,
+      ZConnectionPool.h2test
+    ),
+    test("returns 500 when a request is made to delete users and there is an issue with the transaction") {
+      for {
+        routes <- ZIO.serviceWith[UserEndpointsAlg](_.routes)
+        url <- ZIO.fromEither(URL.decode("/user/LimbMissing"))
+        request = Request(
+          method = Method.DELETE,
+          url = url,
+        )
+        response <- routes.runZIO(request)
+        body <- response.body.asString
+        expected = "{\"message\":\"transaction error\"}"
+      } yield assertTrue(
+        response.status == Status.InternalServerError,
+        body == expected
+      )
+    }.provide(
+      userProgramMock(
+        insertUserResponse = ZIO.succeed(1L),
+        getAllUsersResponse = ZIO.succeed(Chunk.succeed(User("username", "firstname", "lastname", None))),
+        deleteUserByUsernameResponse = ZIO.fail(DatabaseTransactionError("transaction error"))
       ),
       UserEndpoints.layer,
       ZConnectionPool.h2test

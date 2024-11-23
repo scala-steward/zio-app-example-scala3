@@ -9,7 +9,7 @@ import zio.*
 import zio.jdbc.{ZConnectionPool, transaction}
 
 trait UserServiceAlg {
-  def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit]
+  def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Long]
 
   def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]]
 
@@ -20,16 +20,21 @@ final case class UserService(
                               private val userRepository: UserRepositoryAlg
                             ) extends UserServiceAlg {
 
-  override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] = transaction(
-    userRepository.insertUser(user).unit
-  ).mapErrorCause { cause =>
-    cause.squash match {
-      case e: PSQLException if e.getSQLState == PSQLState.UNIQUE_VIOLATION.getState =>
-        Cause.fail(UsernameDuplicateError(e.getMessage))
-      case e =>
-        Cause.fail(DatabaseTransactionError(e.getMessage))
+  override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Long] = transaction(
+    userRepository.insertUser(user).flatMap {
+      case Some(value) => ZIO.succeed(value)
+      case None => ZIO.fail(UserNotInsertedError("Insert did not return a user id"))
     }
-  }
+  ).mapErrorCause { cause =>
+      cause.squash match {
+        case e: PSQLException if e.getSQLState == PSQLState.UNIQUE_VIOLATION.getState =>
+          Cause.fail(UsernameDuplicateError(e.getMessage))
+        case e: ServiceError =>
+          Cause.fail(e)
+        case e =>
+          Cause.fail(DatabaseTransactionError(e.getMessage))
+      }
+    }
 
   override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] = transaction(
     for {
@@ -44,9 +49,20 @@ final case class UserService(
   }
 
   override def deleteUserByUsername(userName: String): ZIO[ZConnectionPool, ServiceError, Unit] = transaction(
-    userRepository.deleteUserByUsername(userName).unit
+    userRepository.softDeleteByUserName(userName).flatMap{
+      case 0 => ZIO.fail(UserNotFoundError("Unable to delete this user as the username does not exist"))
+      case _ => ZIO.unit
+    }
+
   ).mapErrorCause { cause =>
-    Cause.fail(DatabaseTransactionError(cause.squash.getMessage))
+    cause.squash match {
+      case e: PSQLException if e.getSQLState == PSQLState.UNIQUE_VIOLATION.getState =>
+        Cause.fail(UserAlreadyDeletedError(e.getMessage))
+      case e: ServiceError =>
+        Cause.fail(e)
+      case e =>
+        Cause.fail(DatabaseTransactionError(e.getMessage))
+    }
   }
 
 }

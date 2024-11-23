@@ -4,12 +4,13 @@ import zio.*
 import zio.json.*
 import zio.schema.*
 
-final case class SuccessfulResponse(output: String)
+final case class SuccessfulResponse[A](output: A)
 
 object SuccessfulResponse {
-  given schema: Schema[SuccessfulResponse] = DeriveSchema.gen // used for httpContentCodec
-  
-  given statusResponseEncoder: JsonEncoder[SuccessfulResponse] = DeriveJsonEncoder.gen[SuccessfulResponse] // used for json marshalling
 
-  given statusResponseDecoder: JsonDecoder[SuccessfulResponse] = DeriveJsonDecoder.gen[SuccessfulResponse] // used for json marshalling
+  given schema[A: Schema]: Schema[SuccessfulResponse[A]] = DeriveSchema.gen[SuccessfulResponse[A]] // used for httpContentCodec
+
+  given statusResponseEncoder[A: JsonEncoder]: JsonEncoder[SuccessfulResponse[A]] = DeriveJsonEncoder.gen[SuccessfulResponse[A]] // used for json marshalling
+
+  given statusResponseDecoder[A: JsonDecoder]: JsonDecoder[SuccessfulResponse[A]] = DeriveJsonDecoder.gen[SuccessfulResponse[A]] // used for json marshalling
 }

@@ -7,7 +7,7 @@ import zio.jdbc.ZConnectionPool
 import zio.{Chunk, ZIO, ZLayer}
 
 trait UserProgramAlg {
-  def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit]
+  def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Long]
 
   def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]]
 
@@ -18,7 +18,7 @@ final case class UserProgram(
                               private val userService: UserServiceAlg
                             ) extends UserProgramAlg {
 
-  override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Unit] =
+  override def insertUser(user: User): ZIO[ZConnectionPool, ServiceError, Long] =
     userService.insertUser(user)
 
   override def getAllUsers: ZIO[ZConnectionPool, ServiceError, Chunk[User]] =

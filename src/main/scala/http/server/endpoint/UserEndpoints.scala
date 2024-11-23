@@ -13,7 +13,8 @@ import zio.http.endpoint.Endpoint
 import zio.jdbc.ZConnectionPool
 
 trait UserEndpointsAlg {
-  def endpoints: Seq[Endpoint[? >: Unit & String, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]]
+  def endpoints: Seq[Endpoint[? >: Unit & String, ? >: CreateUserPayload & Unit & String, ServiceError, ? >: SuccessfulResponse[Long] & AllUsersResponse & Unit, None]]
+
   def routes: Routes[ZConnectionPool, Nothing]
 }
 
@@ -28,18 +29,19 @@ final case class UserEndpoints(
   private val insertUserEndpoint =
     Endpoint(Method.POST / Root / "user")
       .in[CreateUserPayload]
-      .out[SuccessfulResponse](Status.Created)
+      .out[SuccessfulResponse[Long]](Status.Created)
       .outErrors[ServiceError](
         HttpCodec.error[ToDomainError](Status.UnprocessableEntity),
         HttpCodec.error[UsernameDuplicateError](Status.Conflict),
-        HttpCodec.error[DatabaseTransactionError](Status.InternalServerError)
+        HttpCodec.error[DatabaseTransactionError](Status.InternalServerError),
+        HttpCodec.error[UserNotInsertedError](Status.InternalServerError)
       )
 
   private val insertUserRoute = insertUserEndpoint.implement { (createUserPayload: CreateUserPayload) =>
     for {
       user <- CreateUserPayload.toDomain(createUserPayload).mapError(t => ToDomainError(t.getMessage))
-      _ <- userProgram.insertUser(user)
-    } yield SuccessfulResponse("success")
+      userId <- userProgram.insertUser(user)
+    } yield SuccessfulResponse(userId)
   }
 
   /**
@@ -86,19 +88,21 @@ final case class UserEndpoints(
 
   private val deleteUserEndpoint =
     Endpoint(Method.DELETE / Root / "user" / string("userName"))
-      .out[SuccessfulResponse](Status.NoContent)
-
+      .out[Unit](Status.NoContent) // response status 204 has no response body
+      .outErrors[ServiceError](
+        HttpCodec.error[UserAlreadyDeletedError](Status.BadRequest), // failure when trying to convert UserTableRow to User domain
+        HttpCodec.error[DatabaseTransactionError](Status.InternalServerError), // transaction failure result in 500
+        HttpCodec.error[UserNotFoundError](Status.BadRequest)
+      )
 
   private val deleteUserRoute = deleteUserEndpoint.implement { userName =>
-    for {
-      _ <- userProgram.deleteUserByUsername(userName).orDie
-    } yield SuccessfulResponse("User has been deleted")
+    userProgram.deleteUserByUsername(userName).unit
   }
 
   /**
    * Returns the public endpoints and routes
    */
-  override def endpoints: Seq[Endpoint[? >: Unit & String, ? >: CreateUserPayload & Unit & String, ? >: ZNothing <: ServiceError, ? >: SuccessfulResponse & AllUsersResponse <: Product, None]] = List(
+  override def endpoints: Seq[Endpoint[? >: Unit & String, ? >: CreateUserPayload & Unit & String, ServiceError, ? >: SuccessfulResponse[Long] & AllUsersResponse & Unit, None]] = List(
     insertUserEndpoint,
     getAllUsersEndpoint,
     deleteUserEndpoint

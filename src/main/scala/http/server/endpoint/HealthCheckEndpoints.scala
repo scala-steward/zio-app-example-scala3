@@ -12,7 +12,7 @@ import zio.jdbc.ZConnectionPool
 
 
 trait HealthCheckEndpointsAlg {
-  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & Map[String, String] <: Equals, None]] 
+  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse[String] & Map[String, String] <: Equals, None]] 
   def routes: Routes[ZConnectionPool, Response]
 }
 
@@ -36,7 +36,7 @@ final case class HealthCheckEndpoints(
    */
 
   private val getStatusEndpoint =
-    Endpoint(Method.GET / Root / "status").out[SuccessfulResponse]
+    Endpoint(Method.GET / Root / "status").out[SuccessfulResponse[String]]
 
   private val getStatusRoute = getStatusEndpoint.implement { _ =>
     ZIO.succeed(SuccessfulResponse("Ok"))
@@ -45,7 +45,7 @@ final case class HealthCheckEndpoints(
   /**
    * Returns the public endpoints and routes
    */
-  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse & Map[String, String] <: Equals, None]] = List(
+  def endpoints: List[Endpoint[Unit, Unit, ZNothing, ? >: SuccessfulResponse[String] & Map[String, String] <: Equals, None]] = List(
     getStatusEndpoint,
     getDependenciesStatusEndpoint
   )
