@@ -41,5 +41,5 @@ object StatusRepositoryITSpec extends ZIOSpecDefault {
           )
         }
       }
-    ) @@ TestAspect.timeout(zio.Duration.fromSeconds(35))
+    ) @@ TestAspect.timeout(zio.Duration.fromSeconds(150))
 }

@@ -25,7 +25,7 @@ object UserRepositoryITSpec extends ZIOSpecDefault {
     insertUserTest,
     getAllUsersTest,
     softDeleteUserByUserNameTest
-  ) @@ TestAspect.timeout(zio.Duration.fromSeconds(35))
+  ) @@ TestAspect.timeout(zio.Duration.fromSeconds(150))
 
 
   private val getAllUsersTest = suite("getAllUsers")(

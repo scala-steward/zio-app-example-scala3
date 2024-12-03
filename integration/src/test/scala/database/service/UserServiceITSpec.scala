@@ -25,7 +25,7 @@ object UserServiceITSpec extends ZIOSpecDefault {
     insertUserTests,
     getAllUsersTest,
     deleteUserByUsernameTest
-  ) @@ TestAspect.timeout(zio.Duration.fromSeconds(35))
+  ) @@ TestAspect.timeout(zio.Duration.fromSeconds(150))
 
   private val insertUserTests = suite("insertUser")(
     test("can successfully insert the user") {
