@@ -12,7 +12,7 @@ lazy val testContainerScalaVersion = "0.41.8"
 lazy val postgresDriverVersion = "42.7.5"
 lazy val flywayVersion = "11.3.0"
 lazy val h2Version = "2.3.232"
-lazy val chimneyVersion = "1.7.1"
+lazy val chimneyVersion = "1.7.2"
 lazy val ironVersion = "2.6.0"
 lazy val izumiReflectVersion = "3.0.1"
 
