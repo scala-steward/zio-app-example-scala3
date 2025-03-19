@@ -14,7 +14,7 @@ lazy val flywayVersion = "11.4.0"
 lazy val h2Version = "2.3.232"
 lazy val chimneyVersion = "1.7.3"
 lazy val ironVersion = "2.6.0"
-lazy val izumiReflectVersion = "3.0.1"
+lazy val izumiReflectVersion = "3.0.2"
 
 lazy val root = (project in file("."))
   .settings(
