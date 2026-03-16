@@ -1,4 +1,4 @@
-ThisBuild / scalaVersion := "3.8.1"
+ThisBuild / scalaVersion := "3.8.2"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "com.dpratt747"
 ThisBuild / organizationName := "dpratt747"
@@ -8,12 +8,12 @@ lazy val zioHttpVersion = "3.0.1"
 lazy val zioJsonVersion = "0.9.0"
 lazy val zioJdbcVersion = "0.1.2"
 lazy val zioConfigVersion = "4.0.6"
-lazy val testContainerScalaVersion = "0.43.6"
-lazy val flywayVersion = "12.0.0"
-lazy val postgresDriverVersion = "42.7.9"
+lazy val testContainerScalaVersion = "0.44.1"
+lazy val flywayVersion = "12.1.0"
+lazy val postgresDriverVersion = "42.7.10"
 lazy val h2Version = "2.4.240"
-lazy val chimneyVersion = "1.8.2"
-lazy val ironVersion = "3.2.3"
+lazy val chimneyVersion = "1.9.0"
+lazy val ironVersion = "3.3.0"
 lazy val izumiReflectVersion = "3.0.9"
 
 lazy val root = (project in file("."))
@@ -34,7 +34,7 @@ lazy val root = (project in file("."))
       "dev.zio" %% "izumi-reflect" % izumiReflectVersion
     ) ++ testDependencies,
     scalacOptions ++= Seq("-Yretain-trees"),
-    resolvers ++= Resolver.sonatypeOssRepos("snapshots"),
+    resolvers += Resolver.sonatypeCentralSnapshots,
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
 
